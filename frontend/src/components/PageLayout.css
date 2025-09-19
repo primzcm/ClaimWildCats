@@ -1,0 +1,56 @@
+.page-layout {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface-color);
+  border-radius: 12px;
+  box-shadow: var(--panel-shadow);
+}
+
+.page-layout__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-layout__description {
+  margin-top: 0.5rem;
+  color: var(--muted-color);
+  max-width: 64ch;
+}
+
+.page-layout__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.page-layout__action {
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.page-layout__action--primary {
+  background: var(--brand-color);
+  color: #fff;
+}
+
+.page-layout__action--secondary {
+  background: transparent;
+  color: var(--brand-color);
+  border: 1px solid var(--brand-color);
+}
+
+.page-layout__action:hover {
+  opacity: 0.9;
+}
+
+.page-layout__body {
+  display: grid;
+  gap: 1.25rem;
+}

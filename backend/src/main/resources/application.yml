@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: ClaimWildCats API
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8080
+
+firebase:
+  enabled: ${FIREBASE_ENABLED:false}
+  project-id: ${FIREBASE_PROJECT_ID:claimwildcats-dev}
+  database-url: ${FIREBASE_DATABASE_URL:}
+  storage-bucket: ${FIREBASE_STORAGE_BUCKET:}
+  credentials:
+    location: ${FIREBASE_CREDENTIALS_PATH:}
+    type: service-account
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    com.claimwildcats: INFO
+    org.springframework.security: WARN
