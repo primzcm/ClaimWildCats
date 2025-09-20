@@ -2,19 +2,22 @@
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #0f172a;
-  background-color: #eef2ff;
+  color: #3e0703;
+  background-color: #fff0c4;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light;
 
-  --brand-color: #2563eb;
-  --brand-color-muted: #bfdbfe;
-  --surface-color: #ffffff;
-  --muted-color: #475569;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --panel-shadow: 0 20px 45px -20px rgba(30, 64, 175, 0.35);
+  --color-burgundy-dark: #3e0703;
+  --color-burgundy: #660b05;
+  --color-red: #cf1205;
+  --color-gold: #ffcb33;
+  --color-cream: #fff0c4;
+  --surface-color: #fffaf0;
+  --muted-color: rgba(62, 7, 3, 0.72);
+  --border-color: rgba(62, 7, 3, 0.14);
+  --panel-shadow: 0 32px 55px -34px rgba(102, 11, 5, 0.45);
 }
 
 a {
@@ -29,10 +32,11 @@ a:hover {
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.15), transparent 45%),
-    radial-gradient(circle at 80% 20%, rgba(129, 140, 248, 0.25), transparent 50%),
-    #eef2ff;
-  display: block;
+  background:
+    radial-gradient(circle at top left, rgba(207, 18, 5, 0.18), transparent 42%),
+    radial-gradient(circle at 80% 15%, rgba(255, 203, 51, 0.25), transparent 55%),
+    var(--color-cream);
+  color: var(--color-burgundy-dark);
 }
 
 #root {
@@ -45,13 +49,14 @@ h1,
  h4,
  h5,
  h6 {
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
-  color: #1e293b;
+  color: var(--color-burgundy-dark);
 }
 
 p {
   margin: 0;
+  color: var(--muted-color);
 }
 
 ul {

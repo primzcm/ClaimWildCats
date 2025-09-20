@@ -57,7 +57,8 @@ firebase:
 ## 6. Front-end integration
 
 - Install the Firebase Web SDK in the React app (`npm install firebase`).
-- Create a config module under `frontend/src/lib/firebase.ts` that exports the initialized client app.
+- Create a config module under `frontend/src/lib/firebase.js` that exports the initialized client app.
 - Use Firebase Auth hooks for login/register flows and attach ID tokens to API requests.
 
 Once these steps are complete, both the SPA and the API will communicate securely through Firebase while maintaining the structure already scaffolded in this repository.
+
