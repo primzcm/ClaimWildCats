@@ -36,14 +36,14 @@
 }
 
 .page-layout__action--primary {
-  background: var(--brand-color);
-  color: #fff;
+  background: var(--color-red);
+  color: var(--color-cream);
 }
 
 .page-layout__action--secondary {
   background: transparent;
-  color: var(--brand-color);
-  border: 1px solid var(--brand-color);
+  color: var(--color-burgundy);
+  border: 1px solid var(--color-burgundy);
 }
 
 .page-layout__action:hover {

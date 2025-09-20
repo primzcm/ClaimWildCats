@@ -1,21 +1,7 @@
-import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import './PageLayout.css';
 
-type ActionLink = {
-  label: string;
-  to: string;
-  emphasis?: 'primary' | 'secondary';
-};
-
-type PageLayoutProps = {
-  title: string;
-  description?: string;
-  actions?: ActionLink[];
-  children?: ReactNode;
-};
-
-export function PageLayout({ title, description, actions, children }: PageLayoutProps) {
+export function PageLayout({ title, description, actions, children }) {
   return (
     <section className="page-layout">
       <header className="page-layout__header">

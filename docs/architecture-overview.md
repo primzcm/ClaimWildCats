@@ -2,7 +2,7 @@
 
 ## Front-end (React + Vite)
 
-- Routing is defined in `frontend/src/router.tsx`, matching the sitemap for guests, users, and admins.
+- Routing is defined in `frontend/src/router.jsx`, matching the sitemap for guests, users, and admins.
 - `PageLayout` provides a reusable shell for each page while you iteratively build cards, tables, and forms.
 - Extend the placeholder screens with feature components (filters, carousels, chat threads) and call the REST API via `fetch` or a query library.
 
@@ -33,3 +33,4 @@
 5. Claims are submitted through `POST /api/items/{itemId}/claims` and reviewed by admins via `PATCH /api/claims/{claimId}/decision`.
 
 This structure keeps responsibilities separated so multiple team members can work in parallel without stepping on each other.
+

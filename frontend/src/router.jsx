@@ -18,6 +18,7 @@ import { AdminReportsPage } from './pages/AdminReportsPage';
 import { AdminModerationPage } from './pages/AdminModerationPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { GetStartedPage } from './pages/GetStartedPage';
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'get-started', element: <GetStartedPage /> },
       { path: 'search', element: <SearchPage /> },
       { path: 'items/new/lost', element: <ReportLostPage /> },
       { path: 'items/new/found', element: <ReportFoundPage /> },

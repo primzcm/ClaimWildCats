@@ -1,24 +1,30 @@
 # ClaimWildCats
 
-ClaimWildCats is a university lost & found platform built with a React front-end, a Spring Boot API, and Firebase for authentication, storage, and push services. This repository houses both the web client and the server in a single workspace.
+ClaimWildCats is a university lost & found platform built with a React front-end, a Spring Boot API, and Firebase for authentication, storage, and notifications. This repository houses both the web client and the server in a single workspace.
 
 ## Project layout
 
 ```
-frontend/  # React + Vite SPA with React Router skeleton for all sitemap routes
-backend/   # Spring Boot 3 REST API with Firebase-ready configuration stubs
+frontend/  # React + Vite SPA (JavaScript, React Router, Firebase Auth)
+backend/   # Spring Boot 3 REST API with Firebase-ready configuration
 docs/      # Additional guides and architectural notes
 ```
 
 ## Prerequisites
 
 - Node.js 18+ and npm
-- Java 17+ (the Spring Boot wrapper will download Maven automatically)
-- Firebase project with Authentication, Firestore, and Cloud Storage enabled
+- Java 17+ (the Spring Boot wrapper downloads Maven automatically)
+- A Firebase project with Authentication and Firestore enabled (Storage optional for now)
 
 ## Quick start
 
-### Front-end
+### 1. Configure Firebase credentials
+
+1. Copy `frontend/.env.example` to `frontend/.env.local`.
+2. Fill in the `VITE_FIREBASE_*` values from Firebase console ? Project settings ? General ? "Your apps".
+3. Place your Admin SDK service account JSON outside the repo and point to it with `FIREBASE_CREDENTIALS_PATH` (see backend section).
+
+### 2. Start the front-end (Vite + React)
 
 ```bash
 cd frontend
@@ -26,34 +32,35 @@ npm install
 npm run dev
 ```
 
-The SPA boots at `http://localhost:5173` and already contains placeholder screens for every route in the UX plan. Start expanding each page with real data hooks and UI components.
+The SPA runs at `http://localhost:5173`. The header reflects Firebase auth state, and the login page supports email/password plus Google sign-in once your env values are set.
 
-### Back-end
+### 3. Start the back-end (Spring Boot)
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+./mvnw spring-boot:run   # use .\mvnw.cmd on Windows
 ```
 
-The API listens on `http://localhost:8080` and exposes OpenAPI docs at `/swagger-ui/index.html`. Current handlers return stub data so you can begin wiring the UI before Firebase is connected.
+The API listens on `http://localhost:8080` with OpenAPI docs at `/swagger-ui/index.html`. When `firebase.enabled=true`, the Firebase Admin SDK boots with the credentials you provide.
 
-## Firebase configuration
+## Backend Firebase configuration
 
-The backend reads Firebase settings from `application.yml`. Populate the following environment variables or override the properties directly:
+Set environment variables or JVM properties before starting the API (see `backend/src/main/resources/application.yml`):
 
 - `FIREBASE_ENABLED=true`
 - `FIREBASE_PROJECT_ID`
 - `FIREBASE_DATABASE_URL`
-- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_STORAGE_BUCKET` (optional until Storage is configured)
 - `FIREBASE_CREDENTIALS_PATH` (e.g. `file:/absolute/path/to/serviceAccount.json`)
 
-See `docs/firebase-setup.md` for end-to-end setup, including importing service account credentials and configuring security rules. The `FirebaseFacade` service and configuration stubs are ready for Firestore integration.
+With these in place, the `FirebaseAuthenticationFilter` accepts `Authorization: Bearer <idToken>` headers, securing POST/PATCH/DELETE item and claim endpoints.
 
 ## Recommended next steps
 
-1. Replace placeholder data in the React pages with hooks that call the API.
-2. Implement Firestore repositories inside `backend/src/main/java/com/claimwildcats/api/service`.
-3. Harden security by integrating Firebase Admin token verification in `SecurityConfig`.
-4. Add automated tests for each controller to lock in the expected behaviour.
+1. Replace service stubs in the Spring Boot services with Firestore reads/writes.
+2. Gate profile/report routes on the client using the auth context and add registration UX.
+3. Expand the lost/found reporting forms to submit real payloads to the API.
+4. Add automated tests around authenticated endpoints and Firestore integration.
 
 Happy building! ??
+

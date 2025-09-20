@@ -1,14 +1,22 @@
 import { NavLink, Outlet, Link } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import { auth } from './lib/firebase';
 import './App.css';
 
 const primaryNav = [
   { to: '/', label: 'Home', end: true },
-  { to: '/search', label: 'Search' },
-  { to: '/me', label: 'Profile' },
-  { to: '/me/reports', label: 'My Reports' },
+  { to: '/get-started', label: 'Get Started' },
+  { to: '/items/new/lost', label: 'Lost' },
+  { to: '/items/new/found', label: 'Found' },
 ];
 
 export default function App() {
+  const { user, loading } = useAuth();
+
+  const handleSignOut = async () => {
+    await auth.signOut();
+  };
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -30,15 +38,23 @@ export default function App() {
           ))}
         </nav>
         <div className="app-header__actions">
-          <NavLink to="/items/new/lost" className="btn btn--ghost">
-            Report Lost
-          </NavLink>
-          <NavLink to="/items/new/found" className="btn btn--primary">
-            Report Found
-          </NavLink>
-          <NavLink to="/auth/login" className="btn btn--outline">
-            Login
-          </NavLink>
+          {!loading && user ? (
+            <>
+              <span className="app-user-pill">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName ?? user.email ?? 'User'} />
+                ) : null}
+                <span>{user.displayName ?? user.email}</span>
+              </span>
+              <button type="button" className="btn btn--ghost" onClick={handleSignOut}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <NavLink to="/auth/login" className="btn btn--ghost">
+              Log in
+            </NavLink>
+          )}
         </div>
       </header>
       <main className="app-main">
@@ -50,7 +66,8 @@ export default function App() {
           <Link to="/admin">Admin Console</Link>
           <Link to="/settings">Privacy</Link>
         </div>
-        <p>© {new Date().getFullYear()} ClaimWildCats Lost &amp; Found</p>
+        <p>(c) {new Date().getFullYear()} ClaimWildCats Lost & Found</p>
+        <small className="app-footer__meta">123 Campus Drive · (000) 000-0000</small>
       </footer>
     </div>
   );
