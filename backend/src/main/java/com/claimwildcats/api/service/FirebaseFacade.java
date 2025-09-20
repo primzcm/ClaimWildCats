@@ -1,6 +1,9 @@
 package com.claimwildcats.api.service;
 
+import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.cloud.FirestoreClient;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -27,6 +30,14 @@ public class FirebaseFacade {
             throw new IllegalStateException("FirebaseApp has not been initialized. Check firebase.enabled in configuration.");
         }
         return firebaseApp;
+    }
+
+    public Optional<FirebaseApp> getAppIfReady() {
+        return Optional.ofNullable(firebaseAppProvider.getIfAvailable());
+    }
+
+    public Optional<Firestore> getFirestore() {
+        return getAppIfReady().map(FirestoreClient::getFirestore);
     }
 
     public void logReadiness() {

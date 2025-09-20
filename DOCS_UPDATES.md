@@ -31,3 +31,10 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Shared: documented changes in this log.
 
 
+
+## 2025-09-20 - Firestore persistence
+
+- Backend: ItemService, ClaimService, and UserService now read/write Firestore via FirebaseFacade, storing reporter/claimant context and falling back to stubs when Firebase is disabled.
+- Backend: Controllers attach the authenticated Firebase UID; added SecurityUtils helper plus Firestore query helpers.
+- Docs: README recommended steps updated to focus on client gating, forms, and automated tests.
+

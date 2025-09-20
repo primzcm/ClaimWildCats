@@ -5,12 +5,14 @@ import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
+import com.claimwildcats.api.security.SecurityUtils;
 import com.claimwildcats.api.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -55,19 +57,24 @@ public class ItemController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create lost item", description = "Submit a new lost item report.")
     public ItemDetail reportLost(@Valid @RequestBody CreateLostItemRequest request) {
-        return itemService.createLostItem(request);
+        String reporterId = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return itemService.createLostItem(request, reporterId);
     }
 
     @PostMapping("/found")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create found item", description = "Submit a new found item report.")
     public ItemDetail reportFound(@Valid @RequestBody CreateFoundItemRequest request) {
-        return itemService.createFoundItem(request);
+        String reporterId = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return itemService.createFoundItem(request, reporterId);
     }
 
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update item status", description = "Moderators or owners can adjust the lifecycle state.")
     public ItemDetail updateStatus(@PathVariable String id, @Valid @RequestBody UpdateItemStatusRequest request) {
+        SecurityUtils.currentUserId().orElseThrow(() -> new AccessDeniedException("Authentication required"));
         return itemService.updateStatus(id, request);
     }
 }
