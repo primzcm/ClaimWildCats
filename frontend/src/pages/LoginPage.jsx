@@ -12,6 +12,26 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const formRef = useRef(null);
 
+  const resetForm = () => {
+    formRef.current?.reset();
+    setEmail('');
+    setPassword('');
+  };
+
+  const surfaceError = (err) => {
+    if (!err) return 'Something went wrong. Please try again.';
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      return 'Check your email and password and try again.';
+    }
+    if (err.code === 'auth/invalid-email') {
+      return 'Enter a valid email address.';
+    }
+    if (err.code === 'auth/network-request-failed') {
+      return 'Network error. Check your connection and retry.';
+    }
+    return err.message ?? 'Unable to sign in right now.';
+  };
+
   const handleEmailSignIn = async (event) => {
     event.preventDefault();
     if (loading) return;
@@ -19,10 +39,10 @@ export function LoginPage() {
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      formRef.current?.reset();
+      resetForm();
       navigate('/me');
     } catch (err) {
-      setError(err?.message ?? 'Unable to sign in with email and password.');
+      setError(surfaceError(err));
     } finally {
       setLoading(false);
     }
@@ -37,9 +57,10 @@ export function LoginPage() {
         throw new Error('Google sign-in is not configured.');
       }
       await signInWithPopup(auth, googleProvider);
+      resetForm();
       navigate('/me');
     } catch (err) {
-      setError(err?.message ?? 'Unable to sign in with Google.');
+      setError(surfaceError(err));
     } finally {
       setLoading(false);
     }
