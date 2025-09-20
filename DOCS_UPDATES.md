@@ -44,3 +44,8 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Frontend: Replaced lost/found placeholders with working forms that POST to `/api/items/lost` and `/api/items/found`, including validation, contact details, and redirects to the created item.
 
+
+## 2025-09-20 - Automated tests
+
+- Backend: Added unit tests for item, claim, and user services with mocked Firestore futures, plus controller tests covering auth-required endpoints.
+
