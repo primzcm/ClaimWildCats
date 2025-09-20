@@ -3,11 +3,13 @@ package com.claimwildcats.api.controller;
 import com.claimwildcats.api.domain.ClaimStatus;
 import com.claimwildcats.api.domain.ClaimSummary;
 import com.claimwildcats.api.dto.ClaimItemRequest;
+import com.claimwildcats.api.security.SecurityUtils;
 import com.claimwildcats.api.service.ClaimService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,7 +41,9 @@ public class ClaimController {
     @PostMapping("/items/{itemId}/claims")
     @Operation(summary = "Submit claim", description = "Claim ownership of a found item.")
     public ClaimSummary submit(@PathVariable String itemId, @Valid @RequestBody ClaimItemRequest request) {
-        return claimService.submitClaim(itemId, request);
+        String claimantId = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return claimService.submitClaim(itemId, request, claimantId);
     }
 
     @PatchMapping("/claims/{claimId}/decision")
@@ -47,7 +51,11 @@ public class ClaimController {
     public ClaimSummary review(
             @PathVariable String claimId,
             @RequestParam ClaimStatus status,
-            @RequestParam(defaultValue = "admin-001") String reviewerId) {
-        return claimService.reviewClaim(claimId, status, reviewerId);
+            @RequestParam(value = "reviewerId", required = false) String reviewerId) {
+        String reviewer = SecurityUtils.currentUserId().orElse(reviewerId);
+        if (reviewer == null) {
+            throw new AccessDeniedException("Reviewer identity required");
+        }
+        return claimService.reviewClaim(claimId, status, reviewer);
     }
 }

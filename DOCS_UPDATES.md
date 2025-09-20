@@ -31,3 +31,21 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Shared: documented changes in this log.
 
 
+
+## 2025-09-20 - Firestore persistence
+
+- Backend: ItemService, ClaimService, and UserService now read/write Firestore via FirebaseFacade, storing reporter/claimant context and falling back to stubs when Firebase is disabled.
+- Backend: Controllers attach the authenticated Firebase UID; added SecurityUtils helper plus Firestore query helpers.
+- Docs: README recommended steps updated to focus on client gating, forms, and automated tests.
+
+- Frontend: added ProtectedRoute/PublicOnlyRoute to guard signed-in pages and redirect guests to login.
+
+## 2025-09-20 - Lost & found forms
+
+- Frontend: Replaced lost/found placeholders with working forms that POST to `/api/items/lost` and `/api/items/found`, including validation, contact details, and redirects to the created item.
+
+
+## 2025-09-20 - Automated tests
+
+- Backend: Added unit tests for item, claim, and user services with mocked Firestore futures, plus controller tests covering auth-required endpoints.
+
