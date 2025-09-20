@@ -62,5 +62,4 @@ With these in place, the `FirebaseAuthenticationFilter` accepts `Authorization: 
 3. Expand the lost/found reporting forms to submit real payloads to the API.
 4. Add automated tests around authenticated endpoints and Firestore integration.
 
-Happy building! ??
 
