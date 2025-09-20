@@ -39,3 +39,8 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Docs: README recommended steps updated to focus on client gating, forms, and automated tests.
 
 - Frontend: added ProtectedRoute/PublicOnlyRoute to guard signed-in pages and redirect guests to login.
+
+## 2025-09-20 - Lost & found forms
+
+- Frontend: Replaced lost/found placeholders with working forms that POST to `/api/items/lost` and `/api/items/found`, including validation, contact details, and redirects to the created item.
+
