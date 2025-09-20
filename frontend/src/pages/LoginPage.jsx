@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import './LoginPage.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from ?? '/me';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,7 +42,7 @@ export function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       resetForm();
-      navigate('/me');
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(surfaceError(err));
     } finally {
@@ -58,7 +60,7 @@ export function LoginPage() {
       }
       await signInWithPopup(auth, googleProvider);
       resetForm();
-      navigate('/me');
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(surfaceError(err));
     } finally {

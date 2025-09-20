@@ -38,3 +38,4 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Backend: Controllers attach the authenticated Firebase UID; added SecurityUtils helper plus Firestore query helpers.
 - Docs: README recommended steps updated to focus on client gating, forms, and automated tests.
 
+- Frontend: added ProtectedRoute/PublicOnlyRoute to guard signed-in pages and redirect guests to login.

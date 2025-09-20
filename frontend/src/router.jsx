@@ -19,6 +19,7 @@ import { AdminModerationPage } from './pages/AdminModerationPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { GetStartedPage } from './pages/GetStartedPage';
+import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -29,21 +30,21 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'get-started', element: <GetStartedPage /> },
       { path: 'search', element: <SearchPage /> },
-      { path: 'items/new/lost', element: <ReportLostPage /> },
-      { path: 'items/new/found', element: <ReportFoundPage /> },
+      { path: 'items/new/lost', element: <ProtectedRoute><ReportLostPage /></ProtectedRoute> },
+      { path: 'items/new/found', element: <ProtectedRoute><ReportFoundPage /></ProtectedRoute> },
       { path: 'items/:id', element: <ItemDetailsPage /> },
-      { path: 'items/:id/edit', element: <EditItemPage /> },
-      { path: 'items/:id/claim', element: <ClaimItemPage /> },
-      { path: 'me', element: <ProfilePage /> },
-      { path: 'me/reports', element: <MyReportsPage /> },
-      { path: 'settings', element: <SettingsPage /> },
-      { path: 'auth/login', element: <LoginPage /> },
-      { path: 'auth/register', element: <RegisterPage /> },
-      { path: 'admin', element: <AdminDashboardPage /> },
-      { path: 'admin/users', element: <AdminUsersPage /> },
-      { path: 'admin/reports', element: <AdminReportsPage /> },
-      { path: 'admin/moderation', element: <AdminModerationPage /> },
-      { path: 'admin/analytics', element: <AdminAnalyticsPage /> },
+      { path: 'items/:id/edit', element: <ProtectedRoute><EditItemPage /></ProtectedRoute> },
+      { path: 'items/:id/claim', element: <ProtectedRoute><ClaimItemPage /></ProtectedRoute> },
+      { path: 'me', element: <ProtectedRoute><ProfilePage /></ProtectedRoute> },
+      { path: 'me/reports', element: <ProtectedRoute><MyReportsPage /></ProtectedRoute> },
+      { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },
+      { path: 'auth/login', element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
+      { path: 'auth/register', element: <PublicOnlyRoute redirectTo='/me'><RegisterPage /></PublicOnlyRoute> },
+      { path: 'admin', element: <ProtectedRoute><AdminDashboardPage /></ProtectedRoute> },
+      { path: 'admin/users', element: <ProtectedRoute><AdminUsersPage /></ProtectedRoute> },
+      { path: 'admin/reports', element: <ProtectedRoute><AdminReportsPage /></ProtectedRoute> },
+      { path: 'admin/moderation', element: <ProtectedRoute><AdminModerationPage /></ProtectedRoute> },
+      { path: 'admin/analytics', element: <ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute> },
       { path: '*', element: <NotFoundPage /> }
     ],
   },

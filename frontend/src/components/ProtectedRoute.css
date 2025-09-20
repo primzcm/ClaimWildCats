@@ -1,0 +1,16 @@
+.route-guard {
+  min-height: 40vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-guard__card {
+  padding: 1.25rem 1.75rem;
+  border-radius: 16px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--panel-shadow);
+  font-weight: 600;
+  color: var(--color-burgundy-dark);
+}
