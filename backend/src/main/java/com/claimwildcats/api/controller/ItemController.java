@@ -1,9 +1,12 @@
 package com.claimwildcats.api.controller;
 
+import com.claimwildcats.api.domain.CampusZone;
 import com.claimwildcats.api.domain.ItemDetail;
+import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
+import com.claimwildcats.api.dto.ItemSearchResponse;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.claimwildcats.api.security.SecurityUtils;
 import com.claimwildcats.api.service.ItemService;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,9 +40,18 @@ public class ItemController {
     }
 
     @GetMapping
-    @Operation(summary = "Browse items", description = "Returns a filtered feed of lost and found posts.")
-    public List<ItemSummary> browse() {
-        return itemService.browseItems();
+    @Operation(
+            summary = "Search items",
+            description = "Returns a paginated feed of lost and found posts filtered by status, campus zone, and query.")
+    public ItemSearchResponse browse(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "campusZone", required = false) String campusZone,
+            @RequestParam(value = "q", required = false) String query,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "pageSize", defaultValue = "12") int pageSize) {
+        ItemStatus parsedStatus = ItemStatus.fromValue(status);
+        CampusZone parsedZone = CampusZone.fromValue(campusZone);
+        return itemService.searchItems(parsedStatus, parsedZone, query, page, pageSize);
     }
 
     @GetMapping("/{id}")
@@ -72,9 +85,10 @@ public class ItemController {
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Update item status", description = "Moderators or owners can adjust the lifecycle state.")
+    @Operation(summary = "Update item status", description = "Owners can update the lifecycle state for their item.")
     public ItemDetail updateStatus(@PathVariable String id, @Valid @RequestBody UpdateItemStatusRequest request) {
-        SecurityUtils.currentUserId().orElseThrow(() -> new AccessDeniedException("Authentication required"));
-        return itemService.updateStatus(id, request);
+        String currentUser = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return itemService.updateStatus(id, request, currentUser);
     }
 }

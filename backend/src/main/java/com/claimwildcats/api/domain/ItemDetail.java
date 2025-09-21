@@ -6,16 +6,13 @@ import java.util.List;
 public record ItemDetail(
         String id,
         String title,
-        ItemStatus status,
         String description,
-        String category,
-        String color,
-        String brand,
-        String location,
-        String custody,
+        ItemStatus status,
+        String locationText,
+        CampusZone campusZone,
         Instant lastSeenAt,
-        Instant reportedAt,
-        List<String> photoUrls,
-        double matchConfidence,
+        Instant createdAt,
+        List<String> tags,
+        List<String> docUrls,
         String reporterId) {
 }

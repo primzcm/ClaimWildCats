@@ -34,8 +34,8 @@ public class UserService {
 
     public UserProfile getProfile(String userId) {
         List<ItemSummary> reports = listMyReports(userId);
-        long openCount = reports.stream().filter(summary -> summary.status() != ItemStatus.RESOLVED).count();
-        long resolvedCount = reports.size() - openCount;
+        long resolvedCount = reports.stream().filter(summary -> summary.status() == ItemStatus.CLAIMED).count();
+        long openCount = reports.size() - resolvedCount;
 
         Optional<UserProfile> firestoreProfile = firebaseFacade.getFirestore()
                 .map(firestore -> fetchUserProfile(firestore, userId, (int) openCount, (int) resolvedCount));

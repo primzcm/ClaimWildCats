@@ -49,3 +49,8 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Backend: Added unit tests for item, claim, and user services with mocked Firestore futures, plus controller tests covering auth-required endpoints.
 
+## 2025-09-21 - Item schema & search integration
+
+- Backend: replaced item domain with campus zone + tags schema, added `CampusZone` enum, paginated `/api/items` search endpoint, enforced ownership on status updates, and now reject document URLs outside `items/{itemId}/` or non-PDF uploads.
+- Frontend: report forms now capture campus zone, tags, and document URLs; Home/Search pages consume the new API and Item Details renders document links.
+- Docs: README/API references updated, storage rules documented, and noted Firebase UTC+8 assumption for timestamps.

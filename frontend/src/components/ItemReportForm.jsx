@@ -1,23 +1,37 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { CAMPUS_ZONES } from '../constants/campusZones';
 import './ItemReportForm.css';
 
 const INITIAL_FORM = {
   title: '',
-  category: '',
   description: '',
-  location: '',
-  when: '',
-  color: '',
-  brand: '',
-  distinguishingMarks: '',
-  rewardOffered: false,
-  contactPreference: '',
-  photoUrls: '',
-  custody: 'WITH_FINDER',
-  serialNumber: '',
+  locationText: '',
+  campusZone: '',
+  lastSeenAt: '',
+  tags: '',
+  docUrls: '',
 };
+
+const PH_TIME_SUFFIX = '+08:00';
+
+function toPhilippinesIso(value) {
+  if (!value) return null;
+  const normalised = value.includes('T') ? `${value}:00${PH_TIME_SUFFIX}` : value;
+  const date = new Date(normalised);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toISOString();
+}
+
+function splitList(value) {
+  return value
+    .split(/\r?\n|,/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
 
 export function ItemReportForm({ mode }) {
   const navigate = useNavigate();
@@ -28,10 +42,10 @@ export function ItemReportForm({ mode }) {
   const [success, setSuccess] = useState('');
 
   const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
+    const { name, value } = event.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -42,39 +56,16 @@ export function ItemReportForm({ mode }) {
   };
 
   const buildPayload = () => {
-    const photos = form.photoUrls
-      .split(/\r?\n|,/)
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-
-    const description = form.distinguishingMarks
-      ? `${form.description}\n\nDistinguishing marks: ${form.distinguishingMarks}`.trim()
-      : form.description;
-
-    const base = {
-      title: form.title,
-      category: form.category,
-      location: form.location,
-      description,
-      color: form.color || null,
-      brand: form.brand || null,
-      contactPreference: form.contactPreference || null,
-      photoUrls: photos,
-    };
-
-    if (isLost) {
-      return {
-        ...base,
-        lastSeenAt: form.when ? new Date(form.when).toISOString() : null,
-        rewardOffered: form.rewardOffered,
-      };
-    }
-
+    const tags = splitList(form.tags).map((tag) => tag.toLowerCase());
+    const docUrls = splitList(form.docUrls);
     return {
-      ...base,
-      foundAt: form.when ? new Date(form.when).toISOString() : null,
-      custody: form.custody,
-      serialNumber: form.serialNumber || null,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      locationText: form.locationText.trim(),
+      campusZone: form.campusZone || null,
+      lastSeenAt: toPhilippinesIso(form.lastSeenAt),
+      tags,
+      docUrls,
     };
   };
 
@@ -126,29 +117,6 @@ export function ItemReportForm({ mode }) {
           </label>
         </div>
 
-        <div className="report-form__row report-form__row--split">
-          <label>
-            Category
-            <input
-              required
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              placeholder="Bags, Electronics, ID Card"
-            />
-          </label>
-          <label>
-            Location
-            <input
-              required
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              placeholder="Building / area"
-            />
-          </label>
-        </div>
-
         <div className="report-form__row">
           <label>
             Description
@@ -164,98 +132,62 @@ export function ItemReportForm({ mode }) {
 
         <div className="report-form__row report-form__row--split">
           <label>
-            Colour
-            <input name="color" value={form.color} onChange={handleChange} placeholder="Optional" />
+            Location details
+            <input
+              required
+              name="locationText"
+              value={form.locationText}
+              onChange={handleChange}
+              placeholder="CIT-U Main Lobby, near guard"
+            />
           </label>
           <label>
-            Brand
-            <input name="brand" value={form.brand} onChange={handleChange} placeholder="Optional" />
+            Campus zone
+            <select name="campusZone" value={form.campusZone} onChange={handleChange}>
+              <option value="">Select zone (optional)</option>
+              {CAMPUS_ZONES.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
         <div className="report-form__row">
           <label>
-            Distinguishing marks
-            <textarea
-              name="distinguishingMarks"
-              value={form.distinguishingMarks}
+            {isLost ? 'Last seen' : 'Last seen / found'} (Philippines time)
+            <input
+              type="datetime-local"
+              required
+              name="lastSeenAt"
+              value={form.lastSeenAt}
               onChange={handleChange}
-              placeholder="Scratches, stickers, engravings"
             />
           </label>
         </div>
 
         <div className="report-form__row report-form__row--split">
           <label>
-            {isLost ? 'Last seen' : 'Found'} (date & time)
+            Tags
             <input
-              type="datetime-local"
-              required
-              name="when"
-              value={form.when}
+              name="tags"
+              value={form.tags}
               onChange={handleChange}
+              placeholder="Comma-separated keywords (optional)"
             />
           </label>
-          {isLost ? (
-            <label className="report-form__checkbox">
-              <span>
-                <strong>Reward offered?</strong>
-                <span className="report-form__hint">Tick if you plan to reward whoever returns the item.</span>
-              </span>
-              <input
-                type="checkbox"
-                name="rewardOffered"
-                checked={form.rewardOffered}
-                onChange={handleChange}
-              />
-            </label>
-          ) : (
-            <label>
-              Custody status
-              <select name="custody" value={form.custody} onChange={handleChange}>
-                <option value="WITH_FINDER">With me</option>
-                <option value="TURNED_IN_OFFICE">Turned in at office</option>
-              </select>
-            </label>
-          )}
-        </div>
-
-        {!isLost && (
-          <div className="report-form__row">
-            <label>
-              Serial / ID number
-              <input
-                name="serialNumber"
-                value={form.serialNumber}
-                onChange={handleChange}
-                placeholder="Optional"
-              />
-            </label>
-          </div>
-        )}
-
-        <div className="report-form__row">
           <label>
-            Contact preference
-            <input
-              name="contactPreference"
-              value={form.contactPreference}
-              onChange={handleChange}
-              placeholder="Email, phone, pickup instructions"
-            />
-          </label>
-        </div>
-
-        <div className="report-form__row">
-          <label>
-            Photo URLs
+            Document URLs
             <textarea
-              name="photoUrls"
-              value={form.photoUrls}
+              name="docUrls"
+              value={form.docUrls}
               onChange={handleChange}
-              placeholder="Paste image URLs, one per line or separated by commas"
+              placeholder="Paste PDF or image links, one per line"
             />
-            <span className="report-form__hint">Uploads coming soon - link to shared drives or cloud folders for now.</span>
+            <span className="report-form__hint">
+              Use Firebase Storage PDF URLs (e.g. gs://&lt;bucket&gt;/items/&lt;itemId&gt;/evidence.pdf). The API rejects other locations.
+            </span>
           </label>
         </div>
       </div>

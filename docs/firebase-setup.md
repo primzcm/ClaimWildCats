@@ -49,6 +49,12 @@ firebase:
 - Use `FirestoreClient.getFirestore(firebaseFacade.getAppOrThrow())` to query collections such as `lostItems` and `claims`.
 - For uploads, call `StorageClient.getInstance(firebaseFacade.getAppOrThrow())` or let the front-end upload directly using Firebase Web SDK.
 
+### Storage structure & rules
+
+- Upload evidence documents to the configured Storage bucket under `items/{itemId}/`. The API enforces this path and rejects URLs that point elsewhere.
+- Use the item id returned from the API when building object names (for example `gs://<bucket>/items/{itemId}/evidence.pdf`).
+- Lock Storage Rules to authenticated users, enforce `contentType == "application/pdf"`, and cap uploads at 10 MB so validation stays aligned.
+
 ## 5. Secure HTTP layer
 
 - Validate Firebase ID tokens in `SecurityConfig` by adding a `FirebaseAuthenticationFilter`.
