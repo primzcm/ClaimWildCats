@@ -54,3 +54,4 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Backend: replaced item domain with campus zone + tags schema, added `CampusZone` enum, paginated `/api/items` search endpoint, enforced ownership on status updates, and now reject document URLs outside `items/{itemId}/` or non-PDF uploads.
 - Frontend: report forms now capture campus zone, tags, and document URLs; Home/Search pages consume the new API and Item Details renders document links.
 - Docs: README/API references updated, storage rules documented, and noted Firebase UTC+8 assumption for timestamps.
+- Frontend: Added Lost Items landing page with search, sort, and report CTA linking to the existing lost report form.

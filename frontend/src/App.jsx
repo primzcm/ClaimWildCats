@@ -6,7 +6,7 @@ import './App.css';
 const primaryNav = [
   { to: '/', label: 'Home', end: true },
   { to: '/get-started', label: 'Get Started' },
-  { to: '/items/new/lost', label: 'Lost' },
+  { to: '/lost', label: 'Lost' },
   { to: '/items/new/found', label: 'Found' },
 ];
 
