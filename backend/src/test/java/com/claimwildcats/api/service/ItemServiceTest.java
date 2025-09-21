@@ -7,11 +7,12 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.claimwildcats.api.config.FirebaseProperties;
+import com.claimwildcats.api.domain.CampusZone;
 import com.claimwildcats.api.domain.ItemDetail;
 import com.claimwildcats.api.domain.ItemStatus;
-import com.claimwildcats.api.domain.ItemSummary;
-import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
+import com.claimwildcats.api.dto.ItemSearchResponse;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.google.api.core.SettableApiFuture;
 import com.google.cloud.Timestamp;
@@ -31,45 +32,47 @@ import org.mockito.ArgumentCaptor;
 
 class ItemServiceTest {
 
+    private static final String BUCKET = "claimwildcats-dev.appspot.com";
+
     private final FirebaseFacade firebaseFacade = mock(FirebaseFacade.class);
     private final Firestore firestore = mock(Firestore.class);
     private final CollectionReference collection = mock(CollectionReference.class);
     private final DocumentReference document = mock(DocumentReference.class);
+    private final FirebaseProperties firebaseProperties = new FirebaseProperties();
 
     private ItemService itemService;
 
     @BeforeEach
     void setUp() {
-        itemService = new ItemService(firebaseFacade);
+        firebaseProperties.setStorageBucket(BUCKET);
+        itemService = new ItemService(firebaseFacade, firebaseProperties);
         lenient().when(firebaseFacade.getFirestore()).thenReturn(Optional.of(firestore));
         lenient().when(firestore.collection("items")).thenReturn(collection);
         lenient().when(collection.document()).thenReturn(document);
         lenient().when(collection.document(org.mockito.ArgumentMatchers.anyString())).thenReturn(document);
+        lenient().when(document.getId()).thenReturn("doc-1");
     }
 
     @Test
     void createLostItem_persistsExpectedFields() throws Exception {
         CreateLostItemRequest request = new CreateLostItemRequest(
                 "Blue Backpack",
-                "Bags",
-                "Library Atrium",
-                Instant.parse("2024-03-01T10:15:30Z"),
                 "Canvas bag with laptop",
-                "Blue",
-                "North Face",
-                true,
-                "Email",
-                List.of("https://example.com/img1"));
+                "Library Atrium",
+                CampusZone.LIBRARY,
+                Instant.parse("2024-03-01T10:15:30Z"),
+                List.of("backpack", "laptop"),
+                List.of("gs://" + BUCKET + "/items/doc-1/evidence.pdf"));
 
         prepareFirestoreResult(Map.of(
                 "title", "Blue Backpack",
-                "category", "Bags",
                 "description", "Canvas bag with laptop",
-                "location", "Library Atrium",
+                "locationText", "Library Atrium",
                 "status", "LOST",
-                "custody", "WITH_OWNER",
-                "photoUrls", List.of("https://example.com/img1"),
-                "reportedAt", Timestamp.now(),
+                "campusZone", "Library",
+                "docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.pdf"),
+                "tags", List.of("backpack", "laptop"),
+                "createdAt", Timestamp.now(),
                 "reporterId", "user-1"));
 
         ItemDetail detail = itemService.createLostItem(request, "user-1");
@@ -81,35 +84,65 @@ class ItemServiceTest {
         assertThat(stored)
                 .containsEntry("title", "Blue Backpack")
                 .containsEntry("status", "LOST")
+                .containsEntry("campusZone", "Library")
                 .containsEntry("reporterId", "user-1")
-                .containsEntry("rewardOffered", true);
+                .containsEntry("docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.pdf"));
 
-        assertThat(detail.status()).isEqualTo(ItemStatus.LOST);
-        assertThat(detail.title()).isEqualTo("Blue Backpack");
+        assertThat(detail.id()).isEqualTo("doc-1");
+        assertThat(detail.docUrls()).containsExactly("gs://" + BUCKET + "/items/doc-1/evidence.pdf");
     }
 
     @Test
-    void updateStatus_updatesFirestoreDocument() throws Exception {
+    void createLostItem_rejectsDocUrlFromOtherBucket() {
+        CreateLostItemRequest request = new CreateLostItemRequest(
+                "Blue Backpack",
+                "Canvas bag with laptop",
+                "Library Atrium",
+                CampusZone.LIBRARY,
+                Instant.parse("2024-03-01T10:15:30Z"),
+                List.of("backpack", "laptop"),
+                List.of("gs://someone-else/items/doc-1/evidence.pdf"));
+
+        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
+    }
+
+    @Test
+    void createLostItem_rejectsNonPdfDocUrl() {
+        CreateLostItemRequest request = new CreateLostItemRequest(
+                "Blue Backpack",
+                "Canvas bag with laptop",
+                "Library Atrium",
+                CampusZone.LIBRARY,
+                Instant.parse("2024-03-01T10:15:30Z"),
+                List.of("backpack", "laptop"),
+                List.of("gs://" + BUCKET + "/items/doc-1/evidence.png"));
+
+        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
+    }
+
+    @Test
+    void updateStatus_requiresOwnership() throws Exception {
         prepareFirestoreResult(Map.of(
                 "title", "Blue Backpack",
-                "category", "Bags",
                 "description", "Canvas bag with laptop",
-                "location", "Library Atrium",
-                "status", "RESOLVED",
-                "custody", "WITH_OWNER",
-                "photoUrls", List.of(),
-                "reportedAt", Timestamp.now(),
-                "reporterId", "user-1"));
+                "locationText", "Library Atrium",
+                "status", "LOST",
+                "campusZone", "Library",
+                "docUrls", List.of(),
+                "tags", List.of(),
+                "createdAt", Timestamp.now(),
+                "reporterId", "owner-1"));
 
-        ItemDetail detail = itemService.updateStatus("doc-1", new UpdateItemStatusRequest(ItemStatus.RESOLVED, "Delivered"));
-        assertThat(detail.status()).isEqualTo(ItemStatus.RESOLVED);
+        assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> itemService.updateStatus("doc-1", new UpdateItemStatusRequest(ItemStatus.CLAIMED, null), "other-user"));
     }
 
     @Test
-    void browseItems_fallbackWhenNoFirestore() {
+    void searchItems_fallsBackWhenNoFirestore() {
         when(firebaseFacade.getFirestore()).thenReturn(Optional.empty());
-        List<ItemSummary> items = itemService.browseItems();
-        assertThat(items).isNotEmpty();
+        ItemSearchResponse response = itemService.searchItems(null, null, null, 0, 10);
+        assertThat(response.items()).isNotEmpty();
     }
 
     private void prepareFirestoreResult(Map<String, Object> data) throws Exception {
@@ -124,14 +157,13 @@ class ItemServiceTest {
 
         DocumentSnapshot snapshot = mock(DocumentSnapshot.class);
         when(snapshot.getId()).thenReturn("doc-1");
+        when(snapshot.exists()).thenReturn(true);
         when(snapshot.getString(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(invocation -> data.get(invocation.getArgument(0)) instanceof String
+                        ? data.get(invocation.getArgument(0))
+                        : null);
+        when(snapshot.get(org.mockito.ArgumentMatchers.anyString()))
                 .thenAnswer(invocation -> data.get(invocation.getArgument(0)));
-        when(snapshot.getDouble(org.mockito.ArgumentMatchers.anyString()))
-                .thenAnswer(invocation -> {
-                    Object value = data.get(invocation.getArgument(0));
-                    return value instanceof Double d ? d : null;
-                });
-        when(snapshot.get("photoUrls")).thenReturn(data.get("photoUrls"));
         when(snapshot.getTimestamp(org.mockito.ArgumentMatchers.anyString()))
                 .thenAnswer(invocation -> (Timestamp) data.get(invocation.getArgument(0)));
 
@@ -140,4 +172,3 @@ class ItemServiceTest {
         when(document.get()).thenReturn(getFuture);
     }
 }
-

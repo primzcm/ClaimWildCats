@@ -1,20 +1,17 @@
 package com.claimwildcats.api.dto;
 
+import com.claimwildcats.api.domain.CampusZone;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
 
 public record CreateLostItemRequest(
         @NotBlank String title,
-        @NotBlank String category,
-        @NotBlank String location,
-        @NotNull Instant lastSeenAt,
         @NotBlank String description,
-        @Size(max = 48) String color,
-        @Size(max = 48) String brand,
-        boolean rewardOffered,
-        @Size(max = 120) String contactPreference,
-        @Size(max = 6) List<@NotBlank String> photoUrls) {
+        @NotBlank String locationText,
+        CampusZone campusZone,
+        Instant lastSeenAt,
+        @Size(max = 10) List<@NotBlank @Size(max = 32) String> tags,
+        @Size(max = 6) List<@NotBlank String> docUrls) {
 }

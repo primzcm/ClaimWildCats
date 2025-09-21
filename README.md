@@ -21,7 +21,7 @@ docs/      # Additional guides and architectural notes
 ### 1. Configure Firebase credentials
 
 1. Copy `frontend/.env.example` to `frontend/.env.local`.
-2. Fill in the `VITE_FIREBASE_*` values from Firebase console ? Project settings ? General ? "Your apps".
+2. Fill in the `VITE_FIREBASE_*` values from Firebase console > Project settings > General > "Your apps".
 3. Place your Admin SDK service account JSON outside the repo and point to it with `FIREBASE_CREDENTIALS_PATH` (see backend section).
 
 ### 2. Start the front-end (Vite + React)
@@ -55,11 +55,28 @@ Set environment variables or JVM properties before starting the API (see `backen
 
 With these in place, the `FirebaseAuthenticationFilter` accepts `Authorization: Bearer <idToken>` headers, securing POST/PATCH/DELETE item and claim endpoints.
 
+## Item schema & search API
+
+All item records follow this shape and are stored in Firestore using Philippines time (UTC+8):
+
+- `id` (string, server generated)
+- `title` & `description`
+- `status`: `lost`, `found`, or `claimed`
+- `locationText` plus optional `campusZone` (`Main`, `Library`, `Gym`, `Labs`, `Canteen`, `Parking`, `Gate1`, `Gate2`, `Other`)
+- `lastSeenAt` (ISO string) and `createdAt`
+- `tags` (array of keywords) and `docUrls` (PDF links stored in Firebase Storage under `items/{itemId}/` in the configured bucket)
+- `reporterId` (Firebase UID)
+
+Search everything through a single paginated endpoint:
+
+```
+GET /api/items?status=&campusZone=&q=&page=&pageSize=
+```
+
+`q` performs a simple match against titles, descriptions, and tags. Responses return `{ items, page, pageSize, totalItems }` for easy client pagination.
+
 ## Recommended next steps
 
-1. Replace service stubs in the Spring Boot services with Firestore reads/writes.
-2. Gate profile/report routes on the client using the auth context and add registration UX.
-3. Expand the lost/found reporting forms to submit real payloads to the API.
-4. Add automated tests around authenticated endpoints and Firestore integration.
-
-
+1. Hook Firebase Storage uploads for PDFs once rules are ready and swap document URLs to signed links.
+2. Add admin controls (custom claims + `/api/admin/**`) for moderation and analytics.
+3. Expand automated tests to cover search filters, ownership rules, and the new item schema.

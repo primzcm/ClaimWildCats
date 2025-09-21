@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.claimwildcats.api.domain.CampusZone;
 import com.claimwildcats.api.domain.ItemDetail;
 import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
@@ -33,7 +34,13 @@ class ItemControllerTest {
     @Test
     void reportLost_requiresAuthentication() {
         CreateLostItemRequest request = new CreateLostItemRequest(
-                "Laptop", "Electronics", "Library", Instant.now(), "MacBook", null, null, false, null, List.of());
+                "Laptop",
+                "Silver MacBook",
+                "Library",
+                CampusZone.LIBRARY,
+                Instant.now(),
+                List.of("electronics"),
+                List.of());
         assertThrows(AccessDeniedException.class, () -> controller.reportLost(request));
     }
 
@@ -45,22 +52,25 @@ class ItemControllerTest {
         ItemDetail detail = new ItemDetail(
                 "item-1",
                 "Laptop",
+                "Silver MacBook",
                 ItemStatus.LOST,
-                "MacBook",
-                "Electronics",
-                null,
-                null,
                 "Library",
-                "WITH_OWNER",
+                CampusZone.LIBRARY,
                 Instant.now(),
                 Instant.now(),
+                List.of("electronics"),
                 List.of(),
-                0.0,
                 "user-7");
         when(itemService.createLostItem(any(), eq("user-7"))).thenReturn(detail);
 
         ItemDetail response = controller.reportLost(new CreateLostItemRequest(
-                "Laptop", "Electronics", "Library", Instant.now(), "MacBook", null, null, false, null, List.of()));
+                "Laptop",
+                "Silver MacBook",
+                "Library",
+                CampusZone.LIBRARY,
+                Instant.now(),
+                List.of("electronics"),
+                List.of()));
 
         assertThat(response).isEqualTo(detail);
     }
@@ -68,6 +78,6 @@ class ItemControllerTest {
     @Test
     void updateStatus_requiresAuthentication() {
         assertThrows(AccessDeniedException.class,
-                () -> controller.updateStatus("item-1", new UpdateItemStatusRequest(ItemStatus.RESOLVED, "done")));
+                () -> controller.updateStatus("item-1", new UpdateItemStatusRequest(ItemStatus.CLAIMED, "done")));
     }
 }
