@@ -5,6 +5,7 @@ import { SearchPage } from './pages/SearchPage';
 import { ReportLostPage } from './pages/ReportLostPage';
 import { ReportFoundPage } from './pages/ReportFoundPage';
 import { LostPage } from './pages/LostPage';
+import { FoundPage } from './pages/FoundPage';
 import { ItemDetailsPage } from './pages/ItemDetailsPage';
 import { EditItemPage } from './pages/EditItemPage';
 import { ClaimItemPage } from './pages/ClaimItemPage';
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
       { path: 'get-started', element: <GetStartedPage /> },
       { path: 'search', element: <SearchPage /> },
       { path: 'lost', element: <LostPage /> },
+      { path: 'found', element: <FoundPage /> },
 
       { path: 'items/new/lost', element: <ProtectedRoute><ReportLostPage /></ProtectedRoute> },
       { path: 'items/new/found', element: <ProtectedRoute><ReportFoundPage /></ProtectedRoute> },
