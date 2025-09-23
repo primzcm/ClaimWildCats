@@ -55,3 +55,4 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Frontend: report forms now capture campus zone, tags, and document URLs; Home/Search pages consume the new API and Item Details renders document links.
 - Docs: README/API references updated, storage rules documented, and noted Firebase UTC+8 assumption for timestamps.
 - Frontend: Added Lost Items landing page with search, sort, and report CTA linking to the existing lost report form.
+- Frontend: Added Found Items landing page mirroring the lost layout with search, sort, and a report shortcut to the existing found form.

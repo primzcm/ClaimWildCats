@@ -7,7 +7,7 @@ const primaryNav = [
   { to: '/', label: 'Home', end: true },
   { to: '/get-started', label: 'Get Started' },
   { to: '/lost', label: 'Lost' },
-  { to: '/items/new/found', label: 'Found' },
+  { to: '/found', label: 'Found' },
 ];
 
 export default function App() {
