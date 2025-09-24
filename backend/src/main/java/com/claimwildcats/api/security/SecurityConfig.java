@@ -5,7 +5,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,8 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/claims/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/claims/**").authenticated()
                         .anyRequest()
-                        .permitAll())
-                .httpBasic(Customizer.withDefaults());
+                        .permitAll());
 
         return http.build();
     }

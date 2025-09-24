@@ -9,13 +9,15 @@ server:
   port: 8080
 
 firebase:
-  enabled: ${FIREBASE_ENABLED:false}
+  enabled: ${FIREBASE_ENABLED:true}
+  database-id: ${FIRESTORE_DATABASE_ID:claimwildcats-dev}
   project-id: ${FIREBASE_PROJECT_ID:claimwildcats-dev}
   database-url: ${FIREBASE_DATABASE_URL:}
-  storage-bucket: ${FIREBASE_STORAGE_BUCKET:}
+  storage-bucket: ${FIREBASE_STORAGE_BUCKET:claimwildcats-dev.firebasestorage.app}
   credentials:
-    location: ${FIREBASE_CREDENTIALS_PATH:}
+    location: ${FIREBASE_CREDENTIALS_PATH:file:/F:/myFiles/FirebaseKeys/claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f.json}
     type: service-account
+
 
 management:
   endpoints:

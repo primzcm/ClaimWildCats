@@ -64,7 +64,7 @@ All item records follow this shape and are stored in Firestore using Philippines
 - `status`: `lost`, `found`, or `claimed`
 - `locationText` plus optional `campusZone` (`Main`, `Library`, `Gym`, `Labs`, `Canteen`, `Parking`, `Gate1`, `Gate2`, `Other`)
 - `lastSeenAt` (ISO string) and `createdAt`
-- `tags` (array of keywords) and `docUrls` (PDF links stored in Firebase Storage under `items/{itemId}/` in the configured bucket)
+- `tags` (array of keywords) and `docUrls` (image links stored in Firebase Storage under `items/{itemId}/` in the configured bucket)
 - `reporterId` (Firebase UID)
 
 Search everything through a single paginated endpoint:
@@ -77,6 +77,6 @@ GET /api/items?status=&campusZone=&q=&page=&pageSize=
 
 ## Recommended next steps
 
-1. Hook Firebase Storage uploads for PDFs once rules are ready and swap document URLs to signed links.
+1. Hook Firebase Storage uploads for images once rules are ready and swap document URLs to signed links.
 2. Add admin controls (custom claims + `/api/admin/**`) for moderation and analytics.
 3. Expand automated tests to cover search filters, ownership rules, and the new item schema.

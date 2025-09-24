@@ -183,10 +183,10 @@ export function ItemReportForm({ mode }) {
               name="docUrls"
               value={form.docUrls}
               onChange={handleChange}
-              placeholder="Paste PDF or image links, one per line"
+              placeholder="Paste image links, one per line"
             />
             <span className="report-form__hint">
-              Use Firebase Storage PDF URLs (e.g. gs://&lt;bucket&gt;/items/&lt;itemId&gt;/evidence.pdf). The API rejects other locations.
+              Use Firebase Storage image URLs (e.g. gs://&lt;bucket&gt;/items/&lt;itemId&gt;/photo.jpg). The API rejects other locations.
             </span>
           </label>
         </div>
