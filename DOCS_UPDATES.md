@@ -60,3 +60,7 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Backend: Hardened ItemService to return stub results instead of 500 errors when Firestore searches fail, logging the underlying exception for troubleshooting.
 
+## 2025-09-25 - Firebase credential path handling
+
+- Backend: Updated `FirebaseConfig` to accept plain filesystem paths (in addition to URI prefixes) for the service-account credential so macOS/Linux environments can point to local JSON keys without adding `file:` manually.
+- Backend: Cleared the default credential path in `application.yml`, so each environment must provide `FIREBASE_CREDENTIALS_PATH` (or disable Firebase) without editing source config.
