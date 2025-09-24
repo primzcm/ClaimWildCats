@@ -7,6 +7,10 @@ import com.google.cloud.firestore.FirestoreOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -74,6 +78,9 @@ public class FirebaseConfig {
         if (location != null && !location.isBlank()) {
             Resource resource = resourceLoader.getResource(location);
             if (!resource.exists()) {
+                resource = resolveFileResource(location);
+            }
+            if (!resource.exists()) {
                 throw new IllegalStateException("Unable to locate Firebase credentials at " + location);
             }
             try (InputStream inputStream = resource.getInputStream()) {
@@ -83,5 +90,17 @@ public class FirebaseConfig {
 
         log.warn("Falling back to Google default credentials for Firebase initialization.");
         return GoogleCredentials.getApplicationDefault();
+    }
+
+    private Resource resolveFileResource(String location) {
+        try {
+            Path path = Paths.get(location);
+            if (Files.exists(path)) {
+                return resourceLoader.getResource(path.toUri().toString());
+            }
+        } catch (InvalidPathException ignored) {
+            // Fall through to default Resource handling
+        }
+        return resourceLoader.getResource("file:" + location);
     }
 }
