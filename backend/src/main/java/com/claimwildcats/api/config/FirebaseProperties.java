@@ -8,6 +8,7 @@ public class FirebaseProperties {
     /** Flag that toggles Firebase initialization. */
     private boolean enabled = false;
     private String projectId;
+    private String databaseId;
     private String databaseUrl;
     private String storageBucket;
     private final Credentials credentials = new Credentials();
@@ -26,6 +27,14 @@ public class FirebaseProperties {
 
     public void setProjectId(String projectId) {
         this.projectId = projectId;
+    }
+
+    public String getDatabaseId() {
+        return databaseId;
+    }
+
+    public void setDatabaseId(String databaseId) {
+        this.databaseId = databaseId;
     }
 
     public String getDatabaseUrl() {

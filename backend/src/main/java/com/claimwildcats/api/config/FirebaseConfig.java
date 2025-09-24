@@ -3,6 +3,7 @@ package com.claimwildcats.api.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.cloud.firestore.FirestoreOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +32,7 @@ public class FirebaseConfig {
     @Bean
     @ConditionalOnProperty(prefix = "firebase", name = "enabled", havingValue = "true")
     public FirebaseApp firebaseApp() throws IOException {
+        String databaseId = properties.getDatabaseId();
         if (!FirebaseApp.getApps().isEmpty()) {
             return FirebaseApp.getInstance();
         }
@@ -44,6 +46,12 @@ public class FirebaseConfig {
         if (properties.getProjectId() != null) {
             builder.setProjectId(properties.getProjectId());
         }
+        if (databaseId != null && !databaseId.isBlank()) {
+            builder.setFirestoreOptions(FirestoreOptions.newBuilder()
+                    .setProjectId(properties.getProjectId())
+                    .setDatabaseId(databaseId)
+                    .build());
+        }
         if (properties.getDatabaseUrl() != null) {
             builder.setDatabaseUrl(properties.getDatabaseUrl());
         }
@@ -51,7 +59,7 @@ public class FirebaseConfig {
             builder.setStorageBucket(properties.getStorageBucket());
         }
 
-        log.info("Initializing FirebaseApp for project {}", properties.getProjectId());
+        log.info("Initializing FirebaseApp for project {} (database: {})", properties.getProjectId(), databaseId == null ? "default" : databaseId);
         return FirebaseApp.initializeApp(builder.build());
     }
 

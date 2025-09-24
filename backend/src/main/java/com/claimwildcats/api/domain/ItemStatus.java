@@ -28,9 +28,9 @@ public enum ItemStatus {
         if (value == null || value.isBlank()) {
             return null;
         }
-        String normalised = value.trim().toLowerCase();
+        String trimmed = value.trim();
         for (ItemStatus status : values()) {
-            if (status.jsonValue.equals(normalised)) {
+            if (status.jsonValue.equalsIgnoreCase(trimmed) || status.name().equalsIgnoreCase(trimmed)) {
                 return status;
             }
         }

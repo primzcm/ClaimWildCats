@@ -69,7 +69,42 @@ This file defines conventions and tips for agents and contributors working in th
 - [ ] Docs updated (`DOCS_UPDATES.md` entry plus guides if needed)
 - [ ] Frontend API calls use `api` and `/api` paths
 - [ ] Controllers small; logic in services; validation present
-- [ ] Local dev still works: `npm run dev` and `./mvnw spring-boot:run`
+
+## IMPORTANT
+Execution Rules (ClaimWildCats)
+
+Never run long-running commands.
+Do NOT run:
+
+.\mvnw spring-boot:run
+
+npm run dev, vite dev, gradle bootRun
+
+Any command that starts a persistent server or watcher
+
+Allowed run/build commands (safe):
+
+Backend build/tests (finish & exit):
+
+.\mvnw -q -DskipTests package
+.\mvnw test
+
+
+Frontend build/lint (finish & exit):
+
+npm ci
+npm run build
+npm run lint
+
+
+If you need the API running:
+Assume it’s available at http://localhost:8080.
+If truly necessary, ask for permission first and provide a non-blocking option:
+
+# (Only if user approves)
+Start-Process -FilePath ".\mvnw.cmd" -ArgumentList "spring-boot:run"
+# To stop later (user action):
+#   netstat -ano | findstr :8080  -> taskkill /PID <PID> /F
 
 ---
 

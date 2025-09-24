@@ -163,10 +163,57 @@ public class ItemService {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted while searching items", e);
         } catch (ExecutionException e) {
-            throw new IllegalStateException("Failed to search items in Firestore", e);
+            if (requiresCompositeIndex(e)) {
+                log.warn("Firestore is missing an index for filtered item search; applying client-side filtering instead", e.getCause());
+                return searchWithoutIndex(firestore, status, campusZone, query, page, pageSize);
+            }
+            log.error("Failed to search items in Firestore; falling back to stub data (status={}, campusZone={}, query={})", status, campusZone, query, e);
+            return fallbackSearch(status, campusZone, query, page, pageSize);
         }
     }
 
+    private ItemSearchResponse searchWithoutIndex(
+            Firestore firestore,
+            ItemStatus status,
+            CampusZone campusZone,
+            String query,
+            int page,
+            int pageSize) {
+        try {
+            List<QueryDocumentSnapshot> documents = firestore.collection(COLLECTION)
+                    .orderBy("createdAt", Query.Direction.DESCENDING)
+                    .limit(MAX_FETCH)
+                    .get()
+                    .get()
+                    .getDocuments();
+            List<ItemSummary> matches = new ArrayList<>();
+            for (QueryDocumentSnapshot doc : documents) {
+                if (status != null) {
+                    String docStatus = doc.getString("status");
+                    if (docStatus == null || !docStatus.equalsIgnoreCase(status.storageValue())) {
+                        continue;
+                    }
+                }
+                if (campusZone != null) {
+                    String zoneValue = safeLower(doc.getString("campusZone"));
+                    if (zoneValue == null || !zoneValue.equals(campusZone.getJsonValue().toLowerCase(Locale.US))) {
+                        continue;
+                    }
+                }
+                if (!matchesQuery(doc, query)) {
+                    continue;
+                }
+                mapSummary(doc).ifPresent(matches::add);
+            }
+            return paginate(matches, page, pageSize);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while searching items without index", e);
+        } catch (ExecutionException e) {
+            log.error("Failed to search items in Firestore without index fallback; returning stub data", e);
+            return fallbackSearch(status, campusZone, query, page, pageSize);
+        }
+    }
     private ItemSearchResponse fallbackSearch(
             ItemStatus status, CampusZone campusZone, String query, int page, int pageSize) {
         List<ItemSummary> all = new ArrayList<>(stubItems());
@@ -190,6 +237,17 @@ public class ItemService {
         return new ItemSearchResponse(List.copyOf(slice), page, pageSize, total);
     }
 
+    private boolean requiresCompositeIndex(ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause == null) {
+            return false;
+        }
+        String message = cause.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("requires an index");
+    }
     private boolean matchesQuery(QueryDocumentSnapshot doc, String query) {
         if (query == null || query.isBlank()) {
             return true;
@@ -573,8 +631,8 @@ public class ItemService {
     private String parseItemIdAndValidate(String docUrl, String bucket) {
         String path = parseStoragePath(docUrl, bucket);
         String itemId = extractItemIdFromPath(path);
-        if (!hasPdfExtension(path)) {
-            throw new IllegalArgumentException("Document URLs must reference PDF files stored in Firebase Storage.");
+        if (!hasImageExtension(path)) {
+            throw new IllegalArgumentException("Document URLs must reference image files stored in Firebase Storage.");
         }
         return itemId;
     }
@@ -656,14 +714,20 @@ public class ItemService {
         return remainder.substring(0, slashIndex);
     }
 
-    private boolean hasPdfExtension(String path) {
+    private boolean hasImageExtension(String path) {
         int lastSlash = path.lastIndexOf('/') + 1;
         String filename = lastSlash >= 0 && lastSlash < path.length() ? path.substring(lastSlash) : path;
         int queryIndex = filename.indexOf('?');
         if (queryIndex >= 0) {
             filename = filename.substring(0, queryIndex);
         }
-        return filename.toLowerCase(Locale.US).endsWith(".pdf");
+        String lower = filename.toLowerCase(Locale.US);
+        return lower.endsWith(".jpg")
+                || lower.endsWith(".jpeg")
+                || lower.endsWith(".png")
+                || lower.endsWith(".gif")
+                || lower.endsWith(".webp")
+                || lower.endsWith(".bmp");
     }
 
     private void requireStorageBucketConfigured(String bucket) {
@@ -692,7 +756,11 @@ public class ItemService {
                 createdAt.minusSeconds(7200),
                 createdAt,
                 List.of("sample"),
-                List.of("https://example.com/doc.pdf"),
+                List.of("https://example.com/image.jpg"),
                 "user-123");
     }
 }
+
+
+
+

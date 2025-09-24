@@ -62,7 +62,7 @@ class ItemServiceTest {
                 CampusZone.LIBRARY,
                 Instant.parse("2024-03-01T10:15:30Z"),
                 List.of("backpack", "laptop"),
-                List.of("gs://" + BUCKET + "/items/doc-1/evidence.pdf"));
+                List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"));
 
         prepareFirestoreResult(Map.of(
                 "title", "Blue Backpack",
@@ -70,7 +70,7 @@ class ItemServiceTest {
                 "locationText", "Library Atrium",
                 "status", "LOST",
                 "campusZone", "Library",
-                "docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.pdf"),
+                "docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"),
                 "tags", List.of("backpack", "laptop"),
                 "createdAt", Timestamp.now(),
                 "reporterId", "user-1"));
@@ -86,10 +86,10 @@ class ItemServiceTest {
                 .containsEntry("status", "LOST")
                 .containsEntry("campusZone", "Library")
                 .containsEntry("reporterId", "user-1")
-                .containsEntry("docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.pdf"));
+                .containsEntry("docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"));
 
         assertThat(detail.id()).isEqualTo("doc-1");
-        assertThat(detail.docUrls()).containsExactly("gs://" + BUCKET + "/items/doc-1/evidence.pdf");
+        assertThat(detail.docUrls()).containsExactly("gs://" + BUCKET + "/items/doc-1/evidence.jpg");
     }
 
     @Test
@@ -101,13 +101,13 @@ class ItemServiceTest {
                 CampusZone.LIBRARY,
                 Instant.parse("2024-03-01T10:15:30Z"),
                 List.of("backpack", "laptop"),
-                List.of("gs://someone-else/items/doc-1/evidence.pdf"));
+                List.of("gs://someone-else/items/doc-1/evidence.jpg"));
 
         assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
     }
 
     @Test
-    void createLostItem_rejectsNonPdfDocUrl() {
+    void createLostItem_rejectsNonImageDocUrl() {
         CreateLostItemRequest request = new CreateLostItemRequest(
                 "Blue Backpack",
                 "Canvas bag with laptop",
@@ -115,7 +115,7 @@ class ItemServiceTest {
                 CampusZone.LIBRARY,
                 Instant.parse("2024-03-01T10:15:30Z"),
                 List.of("backpack", "laptop"),
-                List.of("gs://" + BUCKET + "/items/doc-1/evidence.png"));
+                List.of("gs://" + BUCKET + "/items/doc-1/evidence.txt"));
 
         assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
     }
