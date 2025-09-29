@@ -1,8 +1,10 @@
 import './ItemDetailsPage.css';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ref as storageRef, getDownloadURL } from 'firebase/storage';
 import { PageLayout } from '../components/PageLayout';
 import { api } from '../api/client';
+import { storage } from '../lib/firebase';
 
 const formatter = new Intl.DateTimeFormat('en-PH', {
   dateStyle: 'medium',
@@ -23,12 +25,18 @@ function isPdf(url) {
   return /\.pdf(\?.*)?$/i.test(url);
 }
 
+function looksLikeImage(url) {
+  return /\.(jpe?g|png|gif|webp|bmp)(\?.*)?$/i.test(url);
+}
+
 export function ItemDetailsPage() {
   const { id } = useParams();
   const [item, setItem] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [imageUrls, setImageUrls] = useState([]);
+  const [documentLinks, setDocumentLinks] = useState([]);
 
   useEffect(() => {
     let ignore = false;
@@ -65,6 +73,49 @@ export function ItemDetailsPage() {
       ignore = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolveAttachments = async () => {
+      if (!item?.docUrls || item.docUrls.length === 0) {
+        if (!cancelled) {
+          setImageUrls([]);
+          setDocumentLinks([]);
+        }
+        return;
+      }
+      const resolvedImages = [];
+      const fallbackLinks = [];
+      await Promise.all(item.docUrls.map(async (docUrl) => {
+        if (!docUrl) {
+          return;
+        }
+        if (docUrl.startsWith('gs://')) {
+          try {
+            const url = await getDownloadURL(storageRef(storage, docUrl));
+            resolvedImages.push(url);
+          } catch (err) {
+            // log for diagnostics but do not crash the page
+            console.warn('Failed to resolve Firebase Storage URL', docUrl, err);
+          }
+          return;
+        }
+        if (looksLikeImage(docUrl)) {
+          resolvedImages.push(docUrl);
+        } else {
+          fallbackLinks.push(docUrl);
+        }
+      }));
+      if (!cancelled) {
+        setImageUrls(resolvedImages);
+        setDocumentLinks(fallbackLinks);
+      }
+    };
+    resolveAttachments();
+    return () => {
+      cancelled = true;
+    };
+  }, [item?.docUrls]);
 
   const tags = useMemo(() => item?.tags ?? [], [item]);
 
@@ -135,11 +186,24 @@ export function ItemDetailsPage() {
           </div>
         ) : null}
 
-        {item.docUrls && item.docUrls.length > 0 ? (
+        {imageUrls.length > 0 ? (
+          <div className="item-detail__section">
+            <h3>Images</h3>
+            <ul className="item-detail__images">
+              {imageUrls.map((src, index) => (
+                <li key={src}>
+                  <img src={src} alt={`${item.title} evidence ${index + 1}`} loading="lazy" />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {documentLinks.length > 0 ? (
           <div className="item-detail__section">
             <h3>Documents</h3>
             <ul className="item-detail__docs">
-              {item.docUrls.map((url, index) => (
+              {documentLinks.map((url, index) => (
                 <li key={url}>
                   <a
                     href={url}

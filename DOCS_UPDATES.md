@@ -60,3 +60,5 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Backend: Hardened ItemService to return stub results instead of 500 errors when Firestore searches fail, logging the underlying exception for troubleshooting.
 
+- Frontend: Item report forms now accept direct image uploads (Firebase Storage) instead of manual document URLs, with client-side validation and removal controls.
+- Frontend: Clean up abandoned Firebase uploads on form errors and render item evidence images directly on the detail page.

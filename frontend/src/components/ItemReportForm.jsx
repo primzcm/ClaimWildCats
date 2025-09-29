@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { storage } from '../lib/firebase';
 import { CAMPUS_ZONES } from '../constants/campusZones';
 import './ItemReportForm.css';
 
@@ -11,10 +13,10 @@ const INITIAL_FORM = {
   campusZone: '',
   lastSeenAt: '',
   tags: '',
-  docUrls: '',
 };
 
 const PH_TIME_SUFFIX = '+08:00';
+const ATTACHMENT_LIMIT = 5;
 
 function toPhilippinesIso(value) {
   if (!value) return null;
@@ -33,10 +35,67 @@ function splitList(value) {
     .filter(Boolean);
 }
 
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes)) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 102.4) / 10} KB`;
+  return `${Math.round(bytes / 1024 / 102.4) / 10} MB`;
+}
+
+function buildObjectName(file, index) {
+  const extensionMatch = file.name.match(/\.[^./]+$/);
+  const extension = extensionMatch ? extensionMatch[0].toLowerCase() : '';
+  const base = file.name.replace(/\.[^./]+$/, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'attachment';
+  return `${base}-${Date.now()}-${index}${extension}`;
+}
+
+function makeAttachmentId() {
+  return crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+async function uploadAttachments(itemId, attachments) {
+  if (!itemId) {
+    throw new Error('Unable to determine where to store the uploads.');
+  }
+  if (attachments.length === 0) {
+    return [];
+  }
+
+  const uploads = [];
+  try {
+    for (let index = 0; index < attachments.length; index += 1) {
+      const { file } = attachments[index];
+      const objectName = buildObjectName(file, index);
+      const objectPath = `items/${itemId}/${objectName}`;
+      const storageRef = ref(storage, objectPath);
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      uploads.push({ ref: storageRef, storageUri: `gs://${storageRef.bucket}/${objectPath}` });
+    }
+    return uploads;
+  } catch (error) {
+    await cleanupUploads(uploads);
+    throw error;
+  }
+}
+
+async function cleanupUploads(entries) {
+  if (!entries || entries.length === 0) {
+    return;
+  }
+  await Promise.all(entries.map(({ ref: storageRef }) => deleteObject(storageRef).catch(() => {})));
+}
+
 export function ItemReportForm({ mode }) {
   const navigate = useNavigate();
   const isLost = mode === 'lost';
   const [form, setForm] = useState(INITIAL_FORM);
+  const [draftItemId, setDraftItemId] = useState(() => makeAttachmentId());
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentMessage, setAttachmentMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -49,15 +108,60 @@ export function ItemReportForm({ mode }) {
     }));
   };
 
+  const handleFileChange = (event) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (selected.length === 0) {
+      return;
+    }
+
+    let message = '';
+    const remainingSlots = ATTACHMENT_LIMIT - attachments.length;
+    if (remainingSlots <= 0) {
+      setAttachmentMessage(`You can upload up to ${ATTACHMENT_LIMIT} images per report.`);
+      event.target.value = '';
+      return;
+    }
+
+    const imagesOnly = selected.filter((file) => file.type && file.type.startsWith('image/'));
+    if (imagesOnly.length !== selected.length) {
+      message = 'Only image files are supported. Non-image files were ignored.';
+    }
+
+    const usable = imagesOnly.slice(0, remainingSlots).map((file) => ({
+      id: makeAttachmentId(),
+      file,
+    }));
+
+    if (usable.length === 0) {
+      setAttachmentMessage(message || 'Select image files to attach.');
+      event.target.value = '';
+      return;
+    }
+
+    if (imagesOnly.length > usable.length || selected.length > imagesOnly.length) {
+      message = 'Some files were skipped due to format or upload limit.';
+    }
+
+    setAttachments((prev) => [...prev, ...usable]);
+    setAttachmentMessage(message);
+    event.target.value = '';
+  };
+
+  const handleRemoveAttachment = (id) => {
+    setAttachments((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const resetForm = () => {
     setForm(INITIAL_FORM);
+    setAttachments([]);
+    setAttachmentMessage('');
+    setDraftItemId(makeAttachmentId());
     setError('');
     setSuccess('');
   };
 
-  const buildPayload = () => {
+  const buildPayload = (docUrls) => {
     const tags = splitList(form.tags).map((tag) => tag.toLowerCase());
-    const docUrls = splitList(form.docUrls);
     return {
       title: form.title.trim(),
       description: form.description.trim(),
@@ -76,8 +180,10 @@ export function ItemReportForm({ mode }) {
     setError('');
     setSuccess('');
 
+    let uploadedEntries = [];
     try {
-      const payload = buildPayload();
+      uploadedEntries = await uploadAttachments(draftItemId, attachments);
+      const payload = buildPayload(uploadedEntries.map((entry) => entry.storageUri));
       const endpoint = isLost ? '/api/items/lost' : '/api/items/found';
       const created = await api(endpoint, {
         method: 'POST',
@@ -95,7 +201,12 @@ export function ItemReportForm({ mode }) {
         }
       }, 800);
     } catch (err) {
-      setError(err?.message ?? 'Unable to submit the report right now.');
+      await cleanupUploads(uploadedEntries);
+      if (err && err.code === 'storage/unauthorized') {
+        setError('We could not upload your images because storage access was denied. Try signing in again.');
+      } else {
+        setError(err?.message ?? 'Unable to submit the report right now.');
+      }
     } finally {
       setLoading(false);
     }
@@ -177,18 +288,43 @@ export function ItemReportForm({ mode }) {
               placeholder="Comma-separated keywords (optional)"
             />
           </label>
-          <label>
-            Document URLs
-            <textarea
-              name="docUrls"
-              value={form.docUrls}
-              onChange={handleChange}
-              placeholder="Paste image links, one per line"
+          <div className="report-form__files">
+            <label htmlFor="report-files">Upload images</label>
+            <input
+              id="report-files"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              disabled={loading || attachments.length >= ATTACHMENT_LIMIT}
             />
             <span className="report-form__hint">
-              Use Firebase Storage image URLs (e.g. gs://&lt;bucket&gt;/items/&lt;itemId&gt;/photo.jpg). The API rejects other locations.
+              Attach up to {ATTACHMENT_LIMIT} images. Files upload securely to Firebase Storage when you submit the form.
             </span>
-          </label>
+            {attachmentMessage ? (
+              <span className="report-form__note">{attachmentMessage}</span>
+            ) : null}
+            {attachments.length > 0 ? (
+              <ul className="report-form__file-list">
+                {attachments.map((item) => (
+                  <li key={item.id} className="report-form__file-item">
+                    <span>
+                      {item.file.name}
+                      <span className="report-form__file-size">{formatFileSize(item.file.size)}</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="report-form__remove-file"
+                      onClick={() => handleRemoveAttachment(item.id)}
+                      disabled={loading}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
       </div>
 
