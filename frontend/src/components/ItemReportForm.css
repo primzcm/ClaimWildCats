@@ -41,6 +41,67 @@
   resize: vertical;
 }
 
+.report-form__files {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--color-burgundy-dark);
+}
+
+.report-form__files input[type="file"] {
+  font: inherit;
+  background: transparent;
+  padding: 0.35rem 0;
+}
+
+.report-form__file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.report-form__file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(255, 250, 240, 0.8);
+  border: 1px dashed rgba(62, 7, 3, 0.3);
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
+  font-weight: 500;
+}
+
+.report-form__file-item span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.report-form__file-size {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.report-form__remove-file {
+  background: transparent;
+  border: 1px solid rgba(62, 7, 3, 0.35);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-burgundy-dark);
+  cursor: pointer;
+}
+
+.report-form__remove-file[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .report-form__actions {
   display: flex;
   gap: 1rem;
@@ -93,6 +154,12 @@
 .report-form__hint {
   font-size: 0.8rem;
   opacity: 0.75;
+  font-weight: 400;
+}
+
+.report-form__note {
+  font-size: 0.8rem;
+  color: #92400e;
 }
 
 @media (max-width: 640px) {
@@ -124,4 +191,3 @@
   height: auto;
   margin-left: 0.5rem;
 }
-

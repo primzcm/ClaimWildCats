@@ -55,12 +55,20 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Frontend: report forms now capture campus zone, tags, and document URLs; Home/Search pages consume the new API and Item Details renders document links.
 - Docs: README/API references updated, storage rules documented, and noted Firebase UTC+8 assumption for timestamps.
 - Frontend: Added Lost Items landing page with search, sort, and report CTA linking to the existing lost report form.
-- Frontend: Added Found Items landing page mirroring the lost layout with search, sort, and a report shortcut to the existing found form.
+- Frontend: Added Found Items landing page mirroring the lost layout with search, sort, and a report shortcut to the existing found form
+
 ## 2025-09-25 - Firestore search fallback
 
 - Backend: Hardened ItemService to return stub results instead of 500 errors when Firestore searches fail, logging the underlying exception for troubleshooting.
-
+- Frontend: Item report forms now accept direct image uploads (Firebase Storage) instead of manual document URLs, with client-side validation and removal controls.
+- Frontend: Clean up abandoned Firebase uploads on form errors and render item evidence images directly on the detail page.
+=======
 ## 2025-09-25 - Firebase credential path handling
 
 - Backend: Updated `FirebaseConfig` to accept plain filesystem paths (in addition to URI prefixes) for the service-account credential so macOS/Linux environments can point to local JSON keys without adding `file:` manually.
 - Backend: Cleared the default credential path in `application.yml`, so each environment must provide `FIREBASE_CREDENTIALS_PATH` (or disable Firebase) without editing source config.
+
+## 2025-09-29 - Image Uploads
+
+- Frontend: Item report forms now accept direct image uploads (Firebase Storage) instead of manual document URLs, with client-side validation and removal controls.
+- Frontend: Clean up abandoned Firebase uploads on form errors and render item evidence images directly on the detail page.
