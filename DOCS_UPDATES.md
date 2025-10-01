@@ -72,3 +72,4 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Frontend: Item report forms now accept direct image uploads (Firebase Storage) instead of manual document URLs, with client-side validation and removal controls.
 - Frontend: Clean up abandoned Firebase uploads on form errors and render item evidence images directly on the detail page.
+- Frontend: Redesigned lost/found listings with masonry cards, image thumbnails, description snippets, and Firebase image prefetching.

@@ -124,7 +124,8 @@ public class ItemService {
                             detail.campusZone(),
                             Instant.now(),
                             detail.lastSeenAt(),
-                            detail.tags()));
+                            detail.tags(),
+                            detail.docUrls()));
                 });
     }
 
@@ -415,6 +416,8 @@ public class ItemService {
             ItemStatus status = ItemStatus.fromValue(doc.getString("status"));
             Instant createdAt = toInstant(doc.getTimestamp("createdAt"));
             Instant lastSeen = toInstant(doc.getTimestamp("lastSeenAt"));
+            List<String> tags = extractStringList(doc, "tags");
+            List<String> docUrls = extractStringList(doc, "docUrls");
             return Optional.of(new ItemSummary(
                     doc.getId(),
                     doc.getString("title"),
@@ -423,13 +426,13 @@ public class ItemService {
                     CampusZone.fromValue(doc.getString("campusZone")),
                     createdAt,
                     lastSeen,
-                    extractStringList(doc, "tags")));
+                    tags,
+                    docUrls));
         } catch (Exception ex) {
             log.warn("Skipping item {} due to mapping error: {}", doc.getId(), ex.getMessage());
             return Optional.empty();
         }
     }
-
     private ItemDetail mapDetail(DocumentSnapshot doc) {
         List<String> tags = extractStringList(doc, "tags");
         List<String> docUrls = extractStringList(doc, "docUrls");
@@ -738,12 +741,27 @@ public class ItemService {
     private List<ItemSummary> stubItems() {
         Instant now = Instant.now();
         return List.of(
-                new ItemSummary("lost-001", "Blue Backpack", ItemStatus.LOST, "Library Atrium", CampusZone.LIBRARY, now,
-                        now.minusSeconds(3600), List.of("backpack", "electronics")),
-                new ItemSummary("found-002", "Campus ID Card", ItemStatus.FOUND, "Student Union Desk", CampusZone.MAIN, now,
-                        now.minusSeconds(5400), List.of("id", "card")));
+                new ItemSummary(
+                        "lost-001",
+                        "Blue Backpack",
+                        ItemStatus.LOST,
+                        "Library Atrium",
+                        CampusZone.LIBRARY,
+                        now,
+                        now.minusSeconds(3600),
+                        List.of("backpack", "electronics"),
+                        List.of()),
+                new ItemSummary(
+                        "found-002",
+                        "Campus ID Card",
+                        ItemStatus.FOUND,
+                        "Student Union Desk",
+                        CampusZone.MAIN,
+                        now,
+                        now.minusSeconds(5400),
+                        List.of("id", "card"),
+                        List.of()));
     }
-
     private ItemDetail stubDetail(String id) {
         Instant createdAt = Instant.now();
         return new ItemDetail(
@@ -760,6 +778,9 @@ public class ItemService {
                 "user-123");
     }
 }
+
+
+
 
 
 

@@ -1,22 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
+import { ItemGallery } from '../components/ItemGallery';
 import './LostPage.css';
-
-const formatter = new Intl.DateTimeFormat('en-PH', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: 'Asia/Manila',
-});
-
-function formatDate(value) {
-  if (!value) return 'Unknown time';
-  try {
-    return formatter.format(new Date(value));
-  } catch (error) {
-    return 'Unknown time';
-  }
-}
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
@@ -134,30 +120,7 @@ export function LostPage() {
       ) : sortedItems.length === 0 ? (
         <p className="lost-status">No lost items found. Try a different search or file a report.</p>
       ) : (
-        <ul className="lost-grid">
-          {sortedItems.map((item) => (
-            <li key={item.id} className="lost-card">
-              <div className={`lost-card__badge lost-card__badge--${item.status}`}>
-                {item.status}
-              </div>
-              <h2>
-                <Link to={`/items/${item.id}`}>{item.title}</Link>
-              </h2>
-              <p className="lost-card__meta">
-                <span>{item.locationText}</span>
-                {item.campusZone ? <span>- {item.campusZone}</span> : null}
-              </p>
-              <p className="lost-card__time">Updated {formatDate(item.createdAt)}</p>
-              {item.tags && item.tags.length > 0 ? (
-                <ul className="lost-card__tags">
-                  {item.tags.slice(0, 4).map((tag) => (
-                    <li key={`${item.id}-${tag}`}>{tag}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <ItemGallery items={sortedItems} />
       )}
     </div>
   );
