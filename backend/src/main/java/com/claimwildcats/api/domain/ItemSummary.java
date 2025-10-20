@@ -11,5 +11,6 @@ public record ItemSummary(
         CampusZone campusZone,
         Instant createdAt,
         Instant lastSeenAt,
-        List<String> tags) {
+        List<String> tags,
+        List<String> docUrls) {
 }

@@ -15,7 +15,7 @@ firebase:
   database-url: ${FIREBASE_DATABASE_URL:}
   storage-bucket: ${FIREBASE_STORAGE_BUCKET:claimwildcats-dev.firebasestorage.app}
   credentials:
-    location: ${FIREBASE_CREDENTIALS_PATH:}
+    location: ${FIREBASE_CREDENTIALS_PATH:file:/F:/myFiles/FirebaseKeys/claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f.json}
     type: service-account
 
 

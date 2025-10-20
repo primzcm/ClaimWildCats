@@ -53,6 +53,8 @@ Set environment variables or JVM properties before starting the API (see `backen
 - `FIREBASE_STORAGE_BUCKET` (optional until Storage is configured)
 - `FIREBASE_CREDENTIALS_PATH` (e.g. `file:/absolute/path/to/serviceAccount.json`)
 
+You can also edit `backend/src/main/resources/application.yml` directly if you prefer checked-in defaults. Make sure `firebase.credentials.location` references your actual service-account file (for example, `file:/F:/myFiles/FirebaseKeys/claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f.json`).
+
 With these in place, the `FirebaseAuthenticationFilter` accepts `Authorization: Bearer <idToken>` headers, securing POST/PATCH/DELETE item and claim endpoints.
 
 ## Item schema & search API
