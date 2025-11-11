@@ -5,6 +5,7 @@ import { ref as storageRef, getDownloadURL } from 'firebase/storage';
 import { PageLayout } from '../components/PageLayout';
 import { api } from '../api/client';
 import { storage } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 const formatter = new Intl.DateTimeFormat('en-PH', {
   dateStyle: 'medium',
@@ -31,6 +32,7 @@ function looksLikeImage(url) {
 
 export function ItemDetailsPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [item, setItem] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -143,14 +145,21 @@ export function ItemDetailsPage() {
     );
   }
 
+  const isReporter = user && item.reporterId === user.uid;
+  const canClaim = item.status?.toLowerCase() === 'found' && !isReporter;
+  const actions = [];
+  if (canClaim) {
+    actions.push({ label: 'Claim Item', to: `/items/${id}/claim`, emphasis: 'primary' });
+  }
+  if (isReporter) {
+    actions.push({ label: 'Edit Report', to: `/items/${id}/edit` });
+  }
+
   return (
     <PageLayout
       title={item.title}
       description={item.description}
-      actions={[
-        { label: 'Claim Item', to: `/items/${id}/claim`, emphasis: 'primary' },
-        { label: 'Edit Report', to: `/items/${id}/edit` },
-      ]}
+      actions={actions.length > 0 ? actions : undefined}
     >
       <section className="item-detail">
         <dl className="item-detail__grid">

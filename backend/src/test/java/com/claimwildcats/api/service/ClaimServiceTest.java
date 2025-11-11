@@ -1,9 +1,12 @@
 package com.claimwildcats.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.claimwildcats.api.domain.ClaimStatus;
@@ -15,6 +18,8 @@ import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
+import com.google.cloud.firestore.QuerySnapshot;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +34,8 @@ class ClaimServiceTest {
     private final Firestore firestore = mock(Firestore.class);
     private final CollectionReference collection = mock(CollectionReference.class);
     private final DocumentReference document = mock(DocumentReference.class);
+    private final Query query = mock(Query.class);
+    private final QuerySnapshot querySnapshot = mock(QuerySnapshot.class);
 
     private ClaimService claimService;
 
@@ -37,11 +44,21 @@ class ClaimServiceTest {
         claimService = new ClaimService(firebaseFacade);
         lenient().when(firebaseFacade.getFirestore()).thenReturn(Optional.of(firestore));
         lenient().when(firestore.collection("claims")).thenReturn(collection);
+        lenient().when(collection.whereEqualTo(anyString(), any())).thenReturn(query);
+        lenient().when(query.whereEqualTo(anyString(), any())).thenReturn(query);
+        lenient().when(query.orderBy(anyString(), any())).thenReturn(query);
+        SettableApiFuture<QuerySnapshot> future = SettableApiFuture.create();
+        future.set(querySnapshot);
+        lenient().when(query.get()).thenReturn(future);
+        lenient().when(querySnapshot.getDocuments()).thenReturn(List.of());
     }
 
     @Test
     void submitClaim_savesPayloadToFirestore() throws Exception {
-        ClaimItemRequest request = new ClaimItemRequest("Blue keychain", "Has initials", List.of("https://example.com/proof"));
+        ClaimItemRequest request = new ClaimItemRequest(
+                "Blue keychain",
+                "Has initials",
+                List.of("gs://bucket/claims/item-1/proof.jpg"));
         when(collection.document()).thenReturn(document);
 
         prepareDocumentMock(Map.of(
@@ -53,7 +70,7 @@ class ClaimServiceTest {
         ClaimSummary summary = claimService.submitClaim("item-1", request, "user-9");
 
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
-        org.mockito.Mockito.verify(document).set(captor.capture());
+        verify(document).set(captor.capture());
         Map<String, Object> stored = captor.getValue();
         assertThat(stored)
                 .containsEntry("itemId", "item-1")
@@ -62,6 +79,16 @@ class ClaimServiceTest {
 
         assertThat(summary.itemId()).isEqualTo("item-1");
         assertThat(summary.status()).isEqualTo(ClaimStatus.PENDING);
+    }
+
+    @Test
+    void submitClaim_rejectsInvalidAttachments() {
+        ClaimItemRequest request = new ClaimItemRequest(
+                "Blue keychain",
+                "Details",
+                List.of("https://example.com/proof.jpg"));
+
+        assertThrows(IllegalArgumentException.class, () -> claimService.submitClaim("item-1", request, "user-9"));
     }
 
     @Test
@@ -76,19 +103,16 @@ class ClaimServiceTest {
         SettableApiFuture<com.google.cloud.firestore.WriteResult> writeFuture = SettableApiFuture.create();
         writeFuture.set(mock(com.google.cloud.firestore.WriteResult.class));
         when(document.set(mapCaptor.capture())).thenReturn(writeFuture);
-        SettableApiFuture<com.google.cloud.firestore.WriteResult> mergeFuture = SettableApiFuture.create();
-        mergeFuture.set(mock(com.google.cloud.firestore.WriteResult.class));
-        when(document.set(any(), org.mockito.ArgumentMatchers.eq(com.google.cloud.firestore.SetOptions.merge()))).thenReturn(mergeFuture);
 
         DocumentSnapshot snapshot = mock(DocumentSnapshot.class);
         when(snapshot.getId()).thenReturn("claim-1");
-        when(snapshot.getString(org.mockito.ArgumentMatchers.anyString()))
-                .thenAnswer(invocation -> data.get(invocation.getArgument(0)));
-        when(snapshot.getTimestamp(org.mockito.ArgumentMatchers.anyString()))
-                .thenAnswer(invocation -> (Timestamp) data.get(invocation.getArgument(0)));
+        when(snapshot.getString(anyString())).thenAnswer(invocation -> data.get(invocation.getArgument(0)));
+        when(snapshot.getTimestamp(anyString())).thenAnswer(invocation -> (Timestamp) data.get(invocation.getArgument(0)));
+        when(snapshot.get(anyString())).thenReturn(null);
 
         SettableApiFuture<DocumentSnapshot> getFuture = SettableApiFuture.create();
         getFuture.set(snapshot);
         when(document.get()).thenReturn(getFuture);
     }
 }
+
