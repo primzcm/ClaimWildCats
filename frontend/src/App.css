@@ -91,9 +91,16 @@
   gap: 2.5rem;
 }
 
+.page-layout,
+.app-content {
+  overflow-x: hidden;
+}
+
 .app-footer {
   background: var(--color-burgundy-dark);
-  width: 100%;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }
 
 .app-footer__inner {
