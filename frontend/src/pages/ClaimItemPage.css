@@ -1,0 +1,155 @@
+.claim-item__summary {
+  border: 1px solid #e0d1c3;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #fff9f5;
+}
+
+.claim-item__summary h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+}
+
+.claim-item__summary dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.claim-item__summary dt {
+  font-size: 0.85rem;
+  color: #7b5d4c;
+}
+
+.claim-item__summary dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.claim-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.claim-form textarea {
+  min-height: 110px;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #d8c7b8;
+  font: inherit;
+  resize: vertical;
+}
+
+.claim-form__files {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.claim-form__hint {
+  font-size: 0.85rem;
+  color: #6d5a4a;
+}
+
+.claim-form__note {
+  font-size: 0.8rem;
+  color: #a15300;
+}
+
+.claim-form__file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.claim-form__file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e6d7c7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
+.claim-form__file-size {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: #7f6a5a;
+}
+
+.claim-form__remove {
+  background: none;
+  border: none;
+  color: #8c1c13;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.claim-status {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.claim-status--error {
+  background: #ffe6e2;
+  color: #8c1c13;
+}
+
+.claim-status--warning {
+  background: #fff3cd;
+  color: #805b00;
+}
+
+.claim-status--info {
+  background: #e7f1ff;
+  color: #003f88;
+}
+
+.claim-status--success {
+  background: #e3f7e8;
+  color: #1b5e20;
+}
+
+.claim-form__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.claim-form__submit {
+  background: #8c1c13;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.claim-form__secondary {
+  background: transparent;
+  border: 1px solid #b57a50;
+  color: #b57a50;
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+

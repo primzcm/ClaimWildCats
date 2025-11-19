@@ -77,6 +77,19 @@ GET /api/items?status=&campusZone=&q=&page=&pageSize=
 
 `q` performs a simple match against titles, descriptions, and tags. Responses return `{ items, page, pageSize, totalItems }` for easy client pagination.
 
+## Claiming a found item
+
+Owners can open any found-report detail page and select **Claim Item** to submit:
+
+1. A secret detail only the real owner would know (e.g., engraving, PIN, sticker).
+2. A brief justification describing when/where the item went missing.
+3. Up to four supporting photos that upload to Firebase Storage under `claims/{itemId}/...`.
+
+Claims are persisted via `POST /api/items/{itemId}/claims` and stay in `PENDING` status until the finder decides.
+Finders manage requests from the **My Reports** dashboard (`/me/reports`), review each claimant’s evidence, and issue a decision through `PATCH /api/claims/{claimId}/decision`. Approving a claim automatically marks the associated item as `CLAIMED`, keeping the catalogue tidy.
+
+Claim listings under `/api/items/{itemId}/claims` are restricted to the original reporter; claimants can still see their submissions via `/api/users/{uid}/claims`.
+
 ## Recommended next steps
 
 1. Hook Firebase Storage uploads for images once rules are ready and swap document URLs to signed links.

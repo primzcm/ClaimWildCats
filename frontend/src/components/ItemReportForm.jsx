@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
-import { storage } from '../lib/firebase';
 import { CAMPUS_ZONES } from '../constants/campusZones';
+import { cleanupUploads, formatFileSize, generateAttachmentId, uploadFiles } from '../lib/uploads';
 import './ItemReportForm.css';
 
 const INITIAL_FORM = {
@@ -35,65 +34,11 @@ function splitList(value) {
     .filter(Boolean);
 }
 
-function formatFileSize(bytes) {
-  if (!Number.isFinite(bytes)) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 102.4) / 10} KB`;
-  return `${Math.round(bytes / 1024 / 102.4) / 10} MB`;
-}
-
-function buildObjectName(file, index) {
-  const extensionMatch = file.name.match(/\.[^./]+$/);
-  const extension = extensionMatch ? extensionMatch[0].toLowerCase() : '';
-  const base = file.name.replace(/\.[^./]+$/, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '') || 'attachment';
-  return `${base}-${Date.now()}-${index}${extension}`;
-}
-
-function makeAttachmentId() {
-  return crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-async function uploadAttachments(itemId, attachments) {
-  if (!itemId) {
-    throw new Error('Unable to determine where to store the uploads.');
-  }
-  if (attachments.length === 0) {
-    return [];
-  }
-
-  const uploads = [];
-  try {
-    for (let index = 0; index < attachments.length; index += 1) {
-      const { file } = attachments[index];
-      const objectName = buildObjectName(file, index);
-      const objectPath = `items/${itemId}/${objectName}`;
-      const storageRef = ref(storage, objectPath);
-      await uploadBytes(storageRef, file, { contentType: file.type });
-      uploads.push({ ref: storageRef, storageUri: `gs://${storageRef.bucket}/${objectPath}` });
-    }
-    return uploads;
-  } catch (error) {
-    await cleanupUploads(uploads);
-    throw error;
-  }
-}
-
-async function cleanupUploads(entries) {
-  if (!entries || entries.length === 0) {
-    return;
-  }
-  await Promise.all(entries.map(({ ref: storageRef }) => deleteObject(storageRef).catch(() => {})));
-}
-
 export function ItemReportForm({ mode }) {
   const navigate = useNavigate();
   const isLost = mode === 'lost';
   const [form, setForm] = useState(INITIAL_FORM);
-  const [draftItemId, setDraftItemId] = useState(() => makeAttachmentId());
+  const [draftItemId, setDraftItemId] = useState(() => generateAttachmentId());
   const [attachments, setAttachments] = useState([]);
   const [attachmentMessage, setAttachmentMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -128,7 +73,7 @@ export function ItemReportForm({ mode }) {
     }
 
     const usable = imagesOnly.slice(0, remainingSlots).map((file) => ({
-      id: makeAttachmentId(),
+      id: generateAttachmentId(),
       file,
     }));
 
@@ -155,7 +100,7 @@ export function ItemReportForm({ mode }) {
     setForm(INITIAL_FORM);
     setAttachments([]);
     setAttachmentMessage('');
-    setDraftItemId(makeAttachmentId());
+    setDraftItemId(generateAttachmentId());
     setError('');
     setSuccess('');
   };
@@ -182,7 +127,7 @@ export function ItemReportForm({ mode }) {
 
     let uploadedEntries = [];
     try {
-      uploadedEntries = await uploadAttachments(draftItemId, attachments);
+      uploadedEntries = await uploadFiles(`items/${draftItemId}`, attachments);
       const payload = buildPayload(uploadedEntries.map((entry) => entry.storageUri));
       const endpoint = isLost ? '/api/items/lost' : '/api/items/found';
       const created = await api(endpoint, {
