@@ -37,6 +37,18 @@ body {
     radial-gradient(circle at 80% 15%, rgba(255, 203, 51, 0.25), transparent 55%),
     var(--color-cream);
   color: var(--color-burgundy-dark);
+  overflow-x: hidden;
+}
+
+/* Prevent overflow from padding + width */
+* {
+  box-sizing: border-box;
+}
+
+/* Force media to stay inside layout */
+img, video {
+  max-width: 100%;
+  height: auto;
 }
 
 #root {
