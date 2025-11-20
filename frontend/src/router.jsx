@@ -22,14 +22,19 @@ import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { GetStartedPage } from './pages/GetStartedPage';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
+import LandingPage from './pages/LandingPage';
+
 
 export const router = createBrowserRouter([
+
+  { index: true, element: <LandingPage /> },
+
   {
     path: '/',
     element: <App />,
     errorElement: <NotFoundPage />,
     children: [
-      { index: true, element: <HomePage /> },
+      { path: 'home', element: <HomePage /> },
       { path: 'get-started', element: <GetStartedPage /> },
       { path: 'search', element: <SearchPage /> },
       { path: 'lost', element: <LostPage /> },

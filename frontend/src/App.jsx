@@ -1,10 +1,10 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { auth } from './lib/firebase';
 import './App.css';
 
 const primaryNav = [
-  { to: '/', label: 'Home', end: true },
+  { to: '/home', label: 'Home', end: true },
   { to: '/get-started', label: 'Get Started' },
   { to: '/lost', label: 'Lost' },
   { to: '/found', label: 'Found' },
@@ -12,11 +12,19 @@ const primaryNav = [
 
 export default function App() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // const handleSignOut = async () => {
+  //   await auth.signOut();
+  // };
 
   const handleSignOut = async () => {
     await auth.signOut();
+    navigate('/', { replace: true });  // ← redirect to landing
   };
 
+  // Otherwise → render the normal app layout
   return (
     <div className="app">
       <header className="app-header">
@@ -24,6 +32,7 @@ export default function App() {
           <Link to="/" className="app-logo">
             ClaimWildCats
           </Link>
+
           <nav className="app-nav">
             {primaryNav.map((item) => (
               <NavLink
@@ -38,6 +47,7 @@ export default function App() {
               </NavLink>
             ))}
           </nav>
+
           <div className="app-header__actions">
             {!loading && user ? (
               <>
@@ -74,7 +84,9 @@ export default function App() {
             <Link to="/settings">Privacy</Link>
           </div>
           <p>(c) {new Date().getFullYear()} ClaimWildCats Lost &amp; Found</p>
-          <small className="app-footer__meta">123 Campus Drive • (000) 000-0000</small>
+          <small className="app-footer__meta">
+            123 Campus Drive • (000) 000-0000
+          </small>
         </div>
       </footer>
     </div>
