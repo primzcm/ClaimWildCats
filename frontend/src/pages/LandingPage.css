@@ -1,0 +1,117 @@
+.landing {
+  background-color: #fff0c4;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------------- HEADER ---------------- */
+
+.landing-header {
+  background: var(--color-burgundy-dark);
+  padding: 0.9rem 0;
+  width: 100%;
+}
+
+.landing-header__inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.75rem;
+}
+
+.landing-logo {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ---------------- MAIN CONTENT ---------------- */
+
+.landing-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2.5rem 4rem;
+  gap: 3rem;
+}
+
+.landing-left,
+.landing-right {
+  flex: 1;
+}
+
+.landing-cat {
+  width: 100%;
+  max-width: 450px;
+  object-fit: contain;
+  margin-left: 120px;
+}
+
+.landing-title {
+  width: 100%;
+  max-width: 1100px;
+  transform: scale(1.2);   /* 1.0 = normal, 1.2 = 20% bigger */
+  transform-origin: center right; /* anchor the scaling */
+  object-fit: contain;
+  padding-right: 50px;
+}
+
+/* ---------------- LOGIN BUTTON ---------------- */
+
+.landing-login-btn {
+  position: fixed;            /* ← makes it stick to a screen corner */
+  bottom: 2rem;               /* distance from bottom */
+  right: 2rem;                /* distance from right */
+
+  font-size: 2.0rem;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: var(--color-burgundy-dark);
+  cursor: pointer;
+  z-index: 50;                /* ensure it appears above landing art */
+}
+
+.landing-login-btn:hover {
+  opacity: 0.8;
+}
+
+.landing-next-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+
+/* ---------------- RESPONSIVE ---------------- */
+
+@media (max-width: 900px) {
+  .landing-main {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  .landing-left,
+  .landing-right {
+    display: flex;
+    justify-content: center;
+  }
+
+  .landing-cat {
+    max-width: 260px;
+  }
+
+  .landing-title {
+    max-width: 400px;
+  }
+}
