@@ -79,7 +79,7 @@ export default function App() {
       <footer className="app-footer">
         <div className="app-footer__inner">
           <div className="app-footer__links">
-            <Link to="/search">Help / FAQ</Link>
+            <Link to="/faq">Help / FAQ</Link>
             <Link to="/admin">Admin Console</Link>
             <Link to="/settings">Privacy</Link>
           </div>
