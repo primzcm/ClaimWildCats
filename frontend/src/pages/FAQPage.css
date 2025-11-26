@@ -1,0 +1,90 @@
+/* Container */
+.faq-container {
+  padding: 20px;
+  background: #fff4c2;
+  min-height: 100vh;
+}
+
+/* Back Button */
+.faq-back-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3b0000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  gap:12px;
+}
+
+.faq-title {
+  font-size: 2rem;
+  color: #3b0000;
+  margin-bottom: 20px;
+}
+
+/* Dropdown Box */
+.faq-section {
+  background: #460000;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 18px;
+}
+
+/* Header */
+.faq-section-header {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #ffe9b3;
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Rotate arrow */
+.rotate {
+  transform: rotate(180deg);
+  transition: 0.3s;
+}
+
+/* FAQ content (light yellow inner box) */
+.faq-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.0s ease;
+  margin-top: 15px;
+  background: #ffeebc;
+  border-radius: 15px;
+  padding: 0 20px;
+}
+
+/* When open */
+.faq-content.open {
+  max-height: 1000px; /* large enough to fit content */
+  padding: 20px;
+}
+
+/* Individual Q&A */
+.faq-item h3 {
+  margin: 10px 0 5px;
+  font-weight: 700;
+  color: #3b0000;
+}
+
+.faq-item p {
+  margin: 0 0 15px;
+  font-size: 1rem;
+  color: #3b0000;
+}
+
+
+.faq-back-text {
+  font-size: 1.70rem;   /* slightly bigger */
+  font-weight: 500;    /* optional */
+}

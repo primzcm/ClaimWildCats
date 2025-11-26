@@ -23,6 +23,8 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { GetStartedPage } from './pages/GetStartedPage';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
+import FAQPage from './pages/FAQPage';
+
 
 
 export const router = createBrowserRouter([
@@ -41,6 +43,7 @@ export const router = createBrowserRouter([
       { path: 'found', element: <FoundPage /> },
 
       { path: 'items/new/lost', element: <ProtectedRoute><ReportLostPage /></ProtectedRoute> },
+      { path: 'faq', element: <FAQPage /> },
       { path: 'items/new/found', element: <ProtectedRoute><ReportFoundPage /></ProtectedRoute> },
       { path: 'items/:id', element: <ItemDetailsPage /> },
       { path: 'items/:id/edit', element: <ProtectedRoute><EditItemPage /></ProtectedRoute> },
