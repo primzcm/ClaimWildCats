@@ -5,18 +5,38 @@ spring:
     problemdetails:
       enabled: true
 
+  # --- NEW MYSQL CONFIGURATION START ---
+  datasource:
+    # Make sure you created this database in Workbench first!
+    url: jdbc:mysql://localhost:3306/claimwildcats_db
+    username: root
+    # Put the password you created in Workbench here
+    password: f1Xy0u11ajax-
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      # 'update' automatically creates tables based on your Java classes
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  # --- NEW MYSQL CONFIGURATION END ---
+
 server:
   port: 8080
 
-firebase:
-  enabled: ${FIREBASE_ENABLED:true}
-  database-id: ${FIRESTORE_DATABASE_ID:claimwildcats-dev}
-  project-id: ${FIREBASE_PROJECT_ID:claimwildcats-dev}
-  database-url: ${FIREBASE_DATABASE_URL:}
-  storage-bucket: ${FIREBASE_STORAGE_BUCKET:claimwildcats-dev.firebasestorage.app}
-  credentials:
-    location: ${FIREBASE_CREDENTIALS_PATH:file:/C:\Users\Angel\Downloads\claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f 1.json}
-    type: service-account
+# --- FIREBASE (COMMENTED OUT FOR MIGRATION) ---
+# firebase:
+#   enabled: ${FIREBASE_ENABLED:true}
+#   database-id: ${FIRESTORE_DATABASE_ID:claimwildcats-dev}
+#   project-id: ${FIREBASE_PROJECT_ID:claimwildcats-dev}
+#   database-url: ${FIREBASE_DATABASE_URL:}
+#   storage-bucket: ${FIREBASE_STORAGE_BUCKET:claimwildcats-dev.firebasestorage.app}
+#   credentials:
+#     location: ${FIREBASE_CREDENTIALS_PATH:file:/Users/ajaxestela/Downloads/claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f 1.json}
+#     type: service-account
 
 
 management:
