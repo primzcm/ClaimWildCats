@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.claimwildcats.api.domain.ItemDetail;
+import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.entity.Item;
@@ -81,5 +82,23 @@ public class ItemService{
             item.getReporterId()
         );
     }
+
+    public List<ItemSummary> listReportsForUser(String userId){
+        List<Item> items = itemRepository.findByReporterId(userId);
+
+
+        // where we convert naten yung entity to itemsummary record
+        return items.stream()
+        .map(item -> new ItemSummary(
+            item.getId(),
+            item.getTitle(),
+            item.getDescription(),
+            item.getStatus(),
+            item.getLastSeenAt()
+        ))
+        .collect(Collectors.toList());
+    }
+
+
 
 }

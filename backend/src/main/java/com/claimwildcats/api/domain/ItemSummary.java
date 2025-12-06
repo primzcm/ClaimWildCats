@@ -13,4 +13,10 @@ public record ItemSummary(
         Instant lastSeenAt,
         List<String> tags,
         List<String> docUrls) {
+
+                public ItemSummary(String id, String title, String locationText, ItemStatus status, Instant lastSeenAt){
+                        this(id, title, status, locationText, null, null, lastSeenAt, List.of(), List.of());
+                    }
 }
+
+
