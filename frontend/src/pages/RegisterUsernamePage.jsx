@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { api } from '../api/client';
 import './LoginPage.css';
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,14 +24,28 @@ export function RegisterPage() {
       return;
     }
 
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername) {
+      setError('Choose a username to continue.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
-      if (displayName) {
-        await updateProfile(credential.user, { displayName });
+      await updateProfile(credential.user, { displayName: trimmedUsername });
+      try {
+        await api('/api/users/me/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: trimmedUsername }),
+        });
+      } catch (profileError) {
+        // Profile persistence is best-effort; log and continue.
+        console.warn('Could not persist user profile', profileError);
       }
       try {
         await sendEmailVerification(credential.user);
@@ -40,7 +55,7 @@ export function RegisterPage() {
 
       // TODO: persist roleCode in Firestore once roles are implemented.
       setSuccess('Account created! Check your email for a verification link, then log in.');
-      setDisplayName('');
+      setUsername('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
@@ -64,10 +79,10 @@ export function RegisterPage() {
             Username
             <input
               type="text"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              autoComplete="name"
-              placeholder="Jordan Wildcat"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
+              placeholder="wildcat123"
               required
             />
           </label>
@@ -112,7 +127,7 @@ export function RegisterPage() {
             />
           </label>
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Creating account�' : 'Create account'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
@@ -126,3 +141,4 @@ export function RegisterPage() {
     </section>
   );
 }
+

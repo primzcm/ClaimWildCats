@@ -67,7 +67,7 @@ All item records follow this shape and are stored in Firestore using Philippines
 - `locationText` plus optional `campusZone` (`Main`, `Library`, `Gym`, `Labs`, `Canteen`, `Parking`, `Gate1`, `Gate2`, `Other`)
 - `lastSeenAt` (ISO string) and `createdAt`
 - `tags` (array of keywords) and `docUrls` (image links stored in Firebase Storage under `items/{itemId}/` in the configured bucket)
-- `reporterId` (Firebase UID)
+- `reporterId` (Firebase UID, used for ownership checks) and `reporterUsername` (human-friendly username shown in the UI and Firestore).
 
 Search everything through a single paginated endpoint:
 

@@ -34,6 +34,7 @@ public class AdminService {
         return List.of(
                 new UserProfile(
                         "user-123",
+                        "jordanwildcat",
                         "Jordan Wildcat",
                         "jordan.wildcat@campus.edu",
                         UserRole.USER,
@@ -43,6 +44,7 @@ public class AdminService {
                         Instant.now().minusSeconds(120_000)),
                 new UserProfile(
                         "admin-001",
+                        "caseyadmin",
                         "Casey Admin",
                         "casey.admin@campus.edu",
                         UserRole.ADMIN,

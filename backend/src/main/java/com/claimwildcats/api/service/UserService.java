@@ -5,11 +5,14 @@ import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.domain.UserProfile;
 import com.claimwildcats.api.domain.UserRole;
-import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.Timestamp;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.SetOptions;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
@@ -44,6 +47,7 @@ public class UserService {
                 userId,
                 userId,
                 userId,
+                userId,
                 UserRole.USER,
                 false,
                 (int) openCount,
@@ -59,11 +63,49 @@ public class UserService {
         return claimService.listClaimsForUser(userId);
     }
 
+    public UserProfile updateProfile(String userId, String username) {
+        String normalised = username == null ? "" : username.trim();
+        if (normalised.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be blank.");
+        }
+
+        List<ItemSummary> reports = listMyReports(userId);
+        long resolvedCount = reports.stream().filter(summary -> summary.status() == ItemStatus.CLAIMED).count();
+        long openCount = reports.size() - resolvedCount;
+
+        Optional<Firestore> maybeFirestore = firebaseFacade.getFirestore();
+        if (maybeFirestore.isEmpty()) {
+            return new UserProfile(
+                    userId,
+                    normalised,
+                    normalised,
+                    userId,
+                    UserRole.USER,
+                    false,
+                    (int) openCount,
+                    (int) resolvedCount,
+                    Instant.now());
+        }
+
+        Firestore firestore = maybeFirestore.get();
+        try {
+            DocumentReference doc = firestore.collection(USERS_COLLECTION).document(userId);
+            doc.set(Map.of("username", normalised), SetOptions.merge()).get();
+            return fetchUserProfile(firestore, userId, (int) openCount, (int) resolvedCount);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while updating user profile", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Failed to update user profile in Firestore", e);
+        }
+    }
+
     private UserProfile fetchUserProfile(Firestore firestore, String userId, int openCount, int resolvedCount) {
         try {
             DocumentSnapshot snapshot = firestore.collection(USERS_COLLECTION).document(userId).get().get();
             if (!snapshot.exists()) {
                 return new UserProfile(
+                        userId,
                         userId,
                         userId,
                         userId,
@@ -74,7 +116,10 @@ public class UserService {
                         Instant.now());
             }
 
-            String fullName = Optional.ofNullable(snapshot.getString("fullName")).orElse(userId);
+            String username = Optional.ofNullable(snapshot.getString("username"))
+                    .orElseGet(() -> Optional.ofNullable(snapshot.getString("fullName"))
+                            .orElseGet(() -> Optional.ofNullable(snapshot.getString("email")).orElse(userId)));
+            String fullName = Optional.ofNullable(snapshot.getString("fullName")).orElse(username);
             String email = Optional.ofNullable(snapshot.getString("email")).orElse(userId);
             boolean emailVerified = Optional.ofNullable(snapshot.getBoolean("emailVerified")).orElse(false);
             UserRole role = Optional.ofNullable(snapshot.getString("role"))
@@ -93,6 +138,7 @@ public class UserService {
 
             return new UserProfile(
                     userId,
+                    username,
                     fullName,
                     email,
                     role,

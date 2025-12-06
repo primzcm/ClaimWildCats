@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public record UserProfile(
         String id,
+        String username,
         String fullName,
         String email,
         UserRole role,

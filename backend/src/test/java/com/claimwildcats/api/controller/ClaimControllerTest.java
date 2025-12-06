@@ -90,7 +90,7 @@ class ClaimControllerTest {
                 now,
                 List.of(),
                 List.of(),
-                reporterId);
+                reporterId,
+                "user-" + reporterId);
     }
 }
-

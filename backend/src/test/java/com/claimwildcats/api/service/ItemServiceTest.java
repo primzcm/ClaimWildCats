@@ -13,6 +13,7 @@ import com.claimwildcats.api.domain.ItemDetail;
 import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.google.api.core.SettableApiFuture;
 import com.google.cloud.Timestamp;
@@ -73,9 +74,10 @@ class ItemServiceTest {
                 "docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"),
                 "tags", List.of("backpack", "laptop"),
                 "createdAt", Timestamp.now(),
-                "reporterId", "user-1"));
+                "reporterId", "user-1",
+                "reporterUsername", "wildcat1"));
 
-        ItemDetail detail = itemService.createLostItem(request, "user-1");
+        ItemDetail detail = itemService.createLostItem(request, "user-1", "wildcat1");
 
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
         org.mockito.Mockito.verify(document).set(captor.capture());
@@ -86,6 +88,7 @@ class ItemServiceTest {
                 .containsEntry("status", "LOST")
                 .containsEntry("campusZone", "Library")
                 .containsEntry("reporterId", "user-1")
+                .containsEntry("reporterUsername", "wildcat1")
                 .containsEntry("docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"));
 
         assertThat(detail.id()).isEqualTo("doc-1");
@@ -103,7 +106,7 @@ class ItemServiceTest {
                 List.of("backpack", "laptop"),
                 List.of("gs://someone-else/items/doc-1/evidence.jpg"));
 
-        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
+        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1", "wildcat1"));
     }
 
     @Test
@@ -117,7 +120,7 @@ class ItemServiceTest {
                 List.of("backpack", "laptop"),
                 List.of("gs://" + BUCKET + "/items/doc-1/evidence.txt"));
 
-        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
+        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1", "wildcat1"));
     }
 
     @Test
@@ -136,6 +139,33 @@ class ItemServiceTest {
         assertThrows(
                 org.springframework.security.access.AccessDeniedException.class,
                 () -> itemService.updateStatus("doc-1", new UpdateItemStatusRequest(ItemStatus.CLAIMED, null), "other-user"));
+    }
+
+    @Test
+    void updateItem_requiresOwnership() throws Exception {
+        prepareFirestoreResult(Map.of(
+                "title", "Blue Backpack",
+                "description", "Canvas bag with laptop",
+                "locationText", "Library Atrium",
+                "status", "LOST",
+                "campusZone", "Library",
+                "docUrls", List.of(),
+                "tags", List.of(),
+                "createdAt", Timestamp.now(),
+                "reporterId", "owner-1"));
+
+        UpdateItemRequest request = new UpdateItemRequest(
+                "Updated title",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> itemService.updateItem("doc-1", request, "other-user"));
     }
 
     @Test
