@@ -43,6 +43,9 @@ public class ItemService {
 
     private static final Logger log = LoggerFactory.getLogger(ItemService.class);
     private static final String COLLECTION = "items";
+    private static final String META_COLLECTION = "meta";
+    private static final String ITEMS_COUNTER_DOC = "itemsCounter";
+    private static final String COUNTER_FIELD = "nextNumber";
     private static final int MAX_FETCH = 200;
     private static final ZoneId CAMPUS_ZONE_ID = ZoneId.of("Asia/Manila");
 
@@ -300,12 +303,9 @@ public class ItemService {
             Firestore firestore, Object request, String reporterId, ItemStatus status) {
         CollectionReference collection = firestore.collection(COLLECTION);
         List<String> docUrls = docUrlsOf(request);
-        String resolvedItemId = resolveItemIdFromUrls(docUrls);
-        DocumentReference doc = resolvedItemId != null ? collection.document(resolvedItemId) : collection.document();
-        String itemId = doc.getId();
-        if (!docUrls.isEmpty()) {
-            ensureDocUrlsMatchItem(docUrls, itemId);
-        }
+        String itemId = generateSequentialItemId(firestore);
+        DocumentReference doc = collection.document(itemId);
+        ensureDocUrlsMatchItem(docUrls, itemId);
 
         Map<String, Object> data = new HashMap<>();
         data.put("title", titleOf(request));
@@ -466,12 +466,8 @@ public class ItemService {
 
     private ItemDetail fallbackCreate(Object request, String reporterId, ItemStatus status) {
         List<String> docUrls = docUrlsOf(request);
-        String itemId = resolveItemIdFromUrls(docUrls);
-        if (itemId == null) {
-            itemId = "%s-%s".formatted(status.name().toLowerCase(Locale.US), UUID.randomUUID());
-        } else {
-            ensureDocUrlsMatchItem(docUrls, itemId);
-        }
+        String itemId = "%s-%s".formatted(status.name().toLowerCase(Locale.US), UUID.randomUUID());
+        ensureDocUrlsMatchItem(docUrls, itemId);
         Instant now = ZonedDateTime.now(CAMPUS_ZONE_ID).toInstant();
         return new ItemDetail(
                 itemId,
@@ -602,32 +598,40 @@ public class ItemService {
         return value == null ? null : value.toLowerCase(Locale.US);
     }
 
-    private String resolveItemIdFromUrls(List<String> docUrls) {
-        if (docUrls.isEmpty()) {
-            return null;
+    private String generateSequentialItemId(Firestore firestore) {
+        try {
+            Long nextNumber = firestore.runTransaction(transaction -> {
+                        DocumentReference counterRef =
+                                firestore.collection(META_COLLECTION).document(ITEMS_COUNTER_DOC);
+                        DocumentSnapshot snapshot = transaction.get(counterRef).get();
+                        long current;
+                        if (snapshot.exists() && snapshot.contains(COUNTER_FIELD)) {
+                            Long stored = snapshot.getLong(COUNTER_FIELD);
+                            current = stored != null ? stored : 1L;
+                        } else {
+                            current = 1L;
+                        }
+                        long assigned = current;
+                        Map<String, Object> update = new HashMap<>();
+                        update.put(COUNTER_FIELD, current + 1);
+                        transaction.set(counterRef, update);
+                        return assigned;
+                    })
+                    .get();
+            return String.format("ITEM-%06d", nextNumber);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while generating item id", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Failed to generate item id", e);
         }
-        String bucket = firebaseProperties.getStorageBucket();
-        requireStorageBucketConfigured(bucket);
-        String resolvedId = null;
-        for (String docUrl : docUrls) {
-            String itemId = parseItemIdAndValidate(docUrl, bucket);
-            if (resolvedId == null) {
-                resolvedId = itemId;
-            } else if (!resolvedId.equals(itemId)) {
-                throw new IllegalArgumentException("Document URLs must share the same items/{itemId}/ prefix.");
-            }
-        }
-        return resolvedId;
     }
 
     private void ensureDocUrlsMatchItem(List<String> docUrls, String itemId) {
         String bucket = firebaseProperties.getStorageBucket();
         requireStorageBucketConfigured(bucket);
         for (String docUrl : docUrls) {
-            String parsedId = parseItemIdAndValidate(docUrl, bucket);
-            if (!itemId.equals(parsedId)) {
-                throw new IllegalArgumentException("Document URLs must live under items/" + itemId + "/");
-            }
+            parseItemIdAndValidate(docUrl, bucket);
         }
     }
 
@@ -778,10 +782,6 @@ public class ItemService {
                 "user-123");
     }
 }
-
-
-
-
 
 
 

@@ -28,6 +28,9 @@ public class ClaimService {
 
     private static final Logger log = LoggerFactory.getLogger(ClaimService.class);
     private static final String COLLECTION = "claims";
+    private static final String META_COLLECTION = "meta";
+    private static final String CLAIMS_COUNTER_DOC = "claimsCounter";
+    private static final String COUNTER_FIELD = "nextNumber";
     private static final int MAX_ATTACHMENTS = 4;
 
     private final FirebaseFacade firebaseFacade;
@@ -146,7 +149,8 @@ public class ClaimService {
             List<String> attachments) {
         ensureNoDuplicatePendingClaim(firestore, itemId, claimantId);
 
-        DocumentReference doc = firestore.collection(COLLECTION).document();
+        String claimId = generateSequentialClaimId(firestore);
+        DocumentReference doc = firestore.collection(COLLECTION).document(claimId);
         Map<String, Object> document = new HashMap<>();
         document.put("itemId", itemId);
         document.put("claimantId", claimantId);
@@ -354,5 +358,33 @@ public class ClaimService {
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
-}
 
+    private String generateSequentialClaimId(Firestore firestore) {
+        try {
+            Long nextNumber = firestore.runTransaction(transaction -> {
+                        DocumentReference counterRef =
+                                firestore.collection(META_COLLECTION).document(CLAIMS_COUNTER_DOC);
+                        DocumentSnapshot snapshot = transaction.get(counterRef).get();
+                        long current;
+                        if (snapshot.exists() && snapshot.contains(COUNTER_FIELD)) {
+                            Long stored = snapshot.getLong(COUNTER_FIELD);
+                            current = stored != null ? stored : 1L;
+                        } else {
+                            current = 1L;
+                        }
+                        long assigned = current;
+                        Map<String, Object> update = new HashMap<>();
+                        update.put(COUNTER_FIELD, current + 1);
+                        transaction.set(counterRef, update);
+                        return assigned;
+                    })
+                    .get();
+            return String.format("CLAIM-%06d", nextNumber);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while generating claim id", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Failed to generate claim id", e);
+        }
+    }
+}

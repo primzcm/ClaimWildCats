@@ -79,3 +79,9 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Backend: Introduced `ClaimDetail` + `ClaimDecisionRequest`, tightened `ClaimController` access rules, enforced attachment path validation, duplicate-claim checks, and reviewer decisions that auto-mark approved items as `CLAIMED`.
 - Frontend: Added a full Claim Item form with Firebase Storage uploads, duplicate-claim detection, and contextual messaging; `MyReportsPage` now lists found reports and lets reporters approve/deny claims with reviewer notes.
 - Docs: Documented the claim process in `README.md` and logged these changes here.
+
+## 2025-12-06 - Sequential Firestore IDs
+
+- Backend: Updated `ItemService` and `ClaimService` to stop using Firestore auto-generated document IDs and instead assign human-readable, sequential identifiers (`ITEM-000001`, `CLAIM-000001`, etc.) using Firestore-backed counters.
+- Backend: Kept existing schemas and query patterns intact so controllers and clients continue to work, while making the Firestore console easier to navigate during reviews and debugging.
+- Docs: Documented the new ID strategy and core collections in `docs/architecture-overview.md`. Unable to update `docs/firebase-setup.md` via tooling due to an encoding issue, but the expected ID format is now `ITEM-000001` / `CLAIM-000001`.
