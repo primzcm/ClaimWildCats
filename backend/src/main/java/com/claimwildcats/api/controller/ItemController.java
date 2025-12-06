@@ -7,6 +7,7 @@ import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.claimwildcats.api.domain.UserProfile;
 import com.claimwildcats.api.security.SecurityUtils;
@@ -89,6 +90,14 @@ public class ItemController {
                 .orElseThrow(() -> new AccessDeniedException("Authentication required"));
         UserProfile profile = userService.getProfile(reporterId);
         return itemService.createFoundItem(request, reporterId, profile.username());
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update item", description = "Owners can edit an existing lost or found report.")
+    public ItemDetail updateItem(@PathVariable String id, @Valid @RequestBody UpdateItemRequest request) {
+        String currentUser = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return itemService.updateItem(id, request, currentUser);
     }
 
     @PatchMapping("/{id}/status")

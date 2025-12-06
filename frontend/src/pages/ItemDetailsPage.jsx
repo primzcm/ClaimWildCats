@@ -1,8 +1,9 @@
-import './ItemDetailsPage.css';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ref as storageRef, getDownloadURL } from 'firebase/storage';
+import './ItemDetailsPage.css';
 import { PageLayout } from '../components/PageLayout';
+import { ItemReportForm } from '../components/ItemReportForm';
 import { api } from '../api/client';
 import { storage } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -39,6 +40,7 @@ export function ItemDetailsPage() {
   const [error, setError] = useState('');
   const [imageUrls, setImageUrls] = useState([]);
   const [documentLinks, setDocumentLinks] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -151,9 +153,6 @@ export function ItemDetailsPage() {
   if (canClaim) {
     actions.push({ label: 'Claim Item', to: `/items/${id}/claim`, emphasis: 'primary' });
   }
-  if (isReporter) {
-    actions.push({ label: 'Edit Report', to: `/items/${id}/edit` });
-  }
 
   return (
     <PageLayout
@@ -161,6 +160,51 @@ export function ItemDetailsPage() {
       description={item.description}
       actions={actions.length > 0 ? actions : undefined}
     >
+      {isReporter ? (
+        <section className="item-detail__edit">
+          <header className="item-detail__edit-header">
+            <div>
+              <h2>Edit report</h2>
+              <p className="item-detail__edit-hint">
+                Update the title, description, location, and timing details without leaving this page.
+              </p>
+            </div>
+            <div className="item-detail__edit-actions">
+              {!isEditing ? (
+                <button
+                  type="button"
+                  className="item-detail__edit-toggle"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit report
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="item-detail__edit-toggle item-detail__edit-toggle--secondary"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Close
+                </button>
+              )}
+            </div>
+          </header>
+          {isEditing ? (
+            <ItemReportForm
+              mode={item.status?.toLowerCase() === 'lost' ? 'lost' : 'found'}
+              variant="edit"
+              itemId={id}
+              initialItem={item}
+              onSaved={(updated) => {
+                setItem(updated);
+                setIsEditing(false);
+              }}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="item-detail">
         <dl className="item-detail__grid">
           <div>

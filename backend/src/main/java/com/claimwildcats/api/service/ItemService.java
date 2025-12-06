@@ -8,6 +8,7 @@ import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.CollectionReference;
@@ -89,6 +90,12 @@ public class ItemService {
         return firebaseFacade.getFirestore()
                 .map(firestore -> persistItem(firestore, request, reporterId, reporterUsername, ItemStatus.FOUND))
                 .orElseGet(() -> fallbackCreate(request, reporterId, reporterUsername, ItemStatus.FOUND));
+    }
+
+    public ItemDetail updateItem(String id, UpdateItemRequest request, String currentUserId) {
+        return firebaseFacade.getFirestore()
+                .map(firestore -> updateItemInternal(firestore, id, request, currentUserId))
+                .orElseGet(() -> fallbackUpdateItem(id, request, currentUserId));
     }
 
     public ItemDetail updateStatus(String id, UpdateItemStatusRequest request, String currentUserId) {
@@ -364,6 +371,60 @@ public class ItemService {
         }
     }
 
+    private ItemDetail updateItemInternal(
+            Firestore firestore, String id, UpdateItemRequest request, String currentUserId) {
+        try {
+            DocumentReference document = firestore.collection(COLLECTION).document(id);
+            DocumentSnapshot snapshot = document.get().get();
+            if (!snapshot.exists()) {
+                throw new IllegalArgumentException("Item not found: " + id);
+            }
+            ItemDetail detail = mapDetail(snapshot);
+            if (!Objects.equals(detail.reporterId(), currentUserId)) {
+                throw new AccessDeniedException("You can only update your own reports");
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            if (request.title() != null) {
+                updates.put("title", request.title());
+            }
+            if (request.description() != null) {
+                updates.put("description", request.description());
+            }
+            if (request.locationText() != null) {
+                updates.put("locationText", request.locationText());
+            }
+            if (request.campusZone() != null) {
+                updates.put("campusZone", request.campusZone().getJsonValue());
+            }
+            if (request.lastSeenAt() != null) {
+                updates.put("lastSeenAt", timestampOf(request.lastSeenAt()));
+            }
+            if (request.tags() != null) {
+                updates.put("tags", cleanTags(request.tags()));
+            }
+            if (request.docUrls() != null) {
+                List<String> docUrls = cleanDocUrls(request.docUrls());
+                if (!docUrls.isEmpty()) {
+                    ensureDocUrlsMatchItem(docUrls, id);
+                }
+                updates.put("docUrls", docUrls);
+            }
+            if (updates.isEmpty()) {
+                return detail;
+            }
+            updates.put("updatedAt", Timestamp.now());
+            document.set(updates, SetOptions.merge()).get();
+            DocumentSnapshot refreshed = document.get().get();
+            return mapDetail(refreshed);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while updating item", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Failed to update item in Firestore", e);
+        }
+    }
+
     private List<ItemSummary> findSimilarInternal(Firestore firestore, String id) {
         ItemDetail root = fetchItemDetail(firestore, id);
         try {
@@ -559,6 +620,10 @@ public class ItemService {
         } else {
             tags = List.of();
         }
+        return cleanTags(tags);
+    }
+
+    private List<String> cleanTags(List<String> tags) {
         if (tags == null) {
             return List.of();
         }
@@ -583,6 +648,10 @@ public class ItemService {
         } else {
             docUrls = List.of();
         }
+        return cleanDocUrls(docUrls);
+    }
+
+    private List<String> cleanDocUrls(List<String> docUrls) {
         if (docUrls == null) {
             return List.of();
         }
@@ -596,6 +665,36 @@ public class ItemService {
             }
         }
         return List.copyOf(cleaned);
+    }
+
+    private ItemDetail fallbackUpdateItem(String id, UpdateItemRequest request, String currentUserId) {
+        ItemDetail existing = findById(id);
+        if (!Objects.equals(existing.reporterId(), currentUserId)) {
+            throw new AccessDeniedException("You can only update your own reports");
+        }
+        String title = request.title() != null ? request.title() : existing.title();
+        String description = request.description() != null ? request.description() : existing.description();
+        String locationText = request.locationText() != null ? request.locationText() : existing.locationText();
+        CampusZone campusZone = request.campusZone() != null ? request.campusZone() : existing.campusZone();
+        Instant lastSeenAt = request.lastSeenAt() != null ? request.lastSeenAt() : existing.lastSeenAt();
+        List<String> tags = request.tags() != null ? cleanTags(request.tags()) : existing.tags();
+        List<String> docUrls = request.docUrls() != null ? cleanDocUrls(request.docUrls()) : existing.docUrls();
+        if (request.docUrls() != null && !docUrls.isEmpty()) {
+            ensureDocUrlsMatchItem(docUrls, existing.id());
+        }
+        return new ItemDetail(
+                existing.id(),
+                title,
+                description,
+                existing.status(),
+                locationText,
+                campusZone,
+                lastSeenAt,
+                existing.createdAt(),
+                tags,
+                docUrls,
+                existing.reporterId(),
+                existing.reporterUsername());
     }
 
     private String safeLower(String value) {
@@ -787,5 +886,4 @@ public class ItemService {
                 "user-123");
     }
 }
-
 

@@ -91,3 +91,8 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 - Frontend: Registration now asks for a username instead of full name and sends it to the backend after account creation so it can be stored as part of the user profile.
 - Backend: Extended `UserProfile` and `UserService` to track a `username` field, added `/api/users/me/profile` to update the authenticated user’s username, and updated `ItemService`/`ItemController` so each item stores both `reporterId` (UID) and `reporterUsername` (human-readable).
 - Docs: Updated `README.md` and `docs/architecture-overview.md` to describe the new username and `reporterUsername` fields used in Firestore.
+
+## 2025-12-06 - Inline report editing
+
+- Backend: Added `UpdateItemRequest` DTO and a `PATCH /api/items/{id}` endpoint so reporters can update existing lost/found reports (title, description, location, campus zone, last-seen time, tags, and docUrls) while enforcing ownership and storage path validation.
+- Frontend: Extended `ItemReportForm` with an `edit` variant and wired it into `ItemDetailsPage` so reporters can edit their own reports inline on the details view without leaving the page; kept styling consistent with existing forms and detail cards.

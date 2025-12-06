@@ -13,6 +13,7 @@ import com.claimwildcats.api.domain.ItemDetail;
 import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.google.api.core.SettableApiFuture;
 import com.google.cloud.Timestamp;
@@ -138,6 +139,33 @@ class ItemServiceTest {
         assertThrows(
                 org.springframework.security.access.AccessDeniedException.class,
                 () -> itemService.updateStatus("doc-1", new UpdateItemStatusRequest(ItemStatus.CLAIMED, null), "other-user"));
+    }
+
+    @Test
+    void updateItem_requiresOwnership() throws Exception {
+        prepareFirestoreResult(Map.of(
+                "title", "Blue Backpack",
+                "description", "Canvas bag with laptop",
+                "locationText", "Library Atrium",
+                "status", "LOST",
+                "campusZone", "Library",
+                "docUrls", List.of(),
+                "tags", List.of(),
+                "createdAt", Timestamp.now(),
+                "reporterId", "owner-1"));
+
+        UpdateItemRequest request = new UpdateItemRequest(
+                "Updated title",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> itemService.updateItem("doc-1", request, "other-user"));
     }
 
     @Test

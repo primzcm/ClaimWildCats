@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { CAMPUS_ZONES } from '../constants/campusZones';
@@ -34,16 +34,69 @@ function splitList(value) {
     .filter(Boolean);
 }
 
-export function ItemReportForm({ mode }) {
+function toLocalDateTimeInput(value) {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function buildFormFromItem(item) {
+  if (!item) {
+    return INITIAL_FORM;
+  }
+  return {
+    title: item.title ?? '',
+    description: item.description ?? '',
+    locationText: item.locationText ?? '',
+    campusZone: item.campusZone ?? '',
+    lastSeenAt: toLocalDateTimeInput(item.lastSeenAt),
+    tags: Array.isArray(item.tags) && item.tags.length > 0 ? item.tags.join(', ') : '',
+  };
+}
+
+export function ItemReportForm({
+  mode,
+  variant = 'create',
+  itemId,
+  initialItem,
+  onSaved,
+  onCancel,
+}) {
   const navigate = useNavigate();
   const isLost = mode === 'lost';
-  const [form, setForm] = useState(INITIAL_FORM);
+  const isEdit = variant === 'edit';
+  const [form, setForm] = useState(() => (isEdit && initialItem ? buildFormFromItem(initialItem) : INITIAL_FORM));
   const [draftItemId, setDraftItemId] = useState(() => generateAttachmentId());
   const [attachments, setAttachments] = useState([]);
+  const [existingDocUrls, setExistingDocUrls] = useState(
+    () => (isEdit && initialItem && Array.isArray(initialItem.docUrls) ? initialItem.docUrls : []),
+  );
   const [attachmentMessage, setAttachmentMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    if (!isEdit || !initialItem) {
+      return;
+    }
+    setForm(buildFormFromItem(initialItem));
+    if (Array.isArray(initialItem.docUrls)) {
+      setExistingDocUrls(initialItem.docUrls);
+    } else {
+      setExistingDocUrls([]);
+    }
+  }, [isEdit, initialItem]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -60,7 +113,8 @@ export function ItemReportForm({ mode }) {
     }
 
     let message = '';
-    const remainingSlots = ATTACHMENT_LIMIT - attachments.length;
+    const alreadyAttachedCount = isEdit ? existingDocUrls.length + attachments.length : attachments.length;
+    const remainingSlots = ATTACHMENT_LIMIT - alreadyAttachedCount;
     if (remainingSlots <= 0) {
       setAttachmentMessage(`You can upload up to ${ATTACHMENT_LIMIT} images per report.`);
       event.target.value = '';
@@ -96,6 +150,10 @@ export function ItemReportForm({ mode }) {
     setAttachments((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleRemoveExistingDocUrl = (url) => {
+    setExistingDocUrls((prev) => prev.filter((entry) => entry !== url));
+  };
+
   const resetForm = () => {
     setForm(INITIAL_FORM);
     setAttachments([]);
@@ -124,6 +182,37 @@ export function ItemReportForm({ mode }) {
     setLoading(true);
     setError('');
     setSuccess('');
+
+    if (isEdit) {
+      let uploadedEntries = [];
+      try {
+        if (attachments.length > 0) {
+          uploadedEntries = await uploadFiles(`items/${itemId}`, attachments);
+        }
+        const newDocUrls = uploadedEntries.map((entry) => entry.storageUri);
+        const finalDocUrls = [...existingDocUrls, ...newDocUrls];
+        const payload = buildPayload(finalDocUrls);
+        const updated = await api(`/api/items/${itemId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        setSuccess('Changes saved.');
+        setAttachments([]);
+        setAttachmentMessage('');
+        if (typeof onSaved === 'function') {
+          onSaved(updated);
+        }
+      } catch (err) {
+        if (uploadedEntries.length > 0) {
+          await cleanupUploads(uploadedEntries);
+        }
+        setError(err?.message ?? 'Unable to update the report right now.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     let uploadedEntries = [];
     try {
@@ -223,7 +312,7 @@ export function ItemReportForm({ mode }) {
           </label>
         </div>
 
-        <div className="report-form__row report-form__row--split">
+      <div className="report-form__row report-form__row--split">
           <label>
             Tags
             <input
@@ -234,6 +323,26 @@ export function ItemReportForm({ mode }) {
             />
           </label>
           <div className="report-form__files">
+            {isEdit && existingDocUrls.length > 0 ? (
+              <ul className="report-form__file-list">
+                {existingDocUrls.map((url) => (
+                  <li key={url} className="report-form__file-item report-form__file-item--existing">
+                    <span>
+                      {url.split('/').slice(-1)[0].split('?')[0] || 'Existing image'}
+                      <span className="report-form__file-size">Existing attachment</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="report-form__remove-file"
+                      onClick={() => handleRemoveExistingDocUrl(url)}
+                      disabled={loading}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <label htmlFor="report-files">Upload images</label>
             <input
               id="report-files"
@@ -241,10 +350,13 @@ export function ItemReportForm({ mode }) {
               accept="image/*"
               multiple
               onChange={handleFileChange}
-              disabled={loading || attachments.length >= ATTACHMENT_LIMIT}
+              disabled={
+                loading
+                || (isEdit ? existingDocUrls.length + attachments.length >= ATTACHMENT_LIMIT : attachments.length >= ATTACHMENT_LIMIT)
+              }
             />
             <span className="report-form__hint">
-              Attach up to {ATTACHMENT_LIMIT} images. Files upload securely to Firebase Storage when you submit the form.
+              You can attach up to {ATTACHMENT_LIMIT} images per report.
             </span>
             {attachmentMessage ? (
               <span className="report-form__note">{attachmentMessage}</span>
@@ -278,16 +390,37 @@ export function ItemReportForm({ mode }) {
 
       <div className="report-form__actions">
         <button type="submit" className="report-form__submit" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit report'}
+          {loading
+            ? isEdit
+              ? 'Saving...'
+              : 'Submitting...'
+            : isEdit
+              ? 'Save changes'
+              : 'Submit report'}
         </button>
-        <button
-          type="button"
-          className="report-form__secondary"
-          onClick={resetForm}
-          disabled={loading}
-        >
-          Clear form
-        </button>
+        {isEdit ? (
+          <button
+            type="button"
+            className="report-form__secondary"
+            onClick={() => {
+              if (typeof onCancel === 'function') {
+                onCancel();
+              }
+            }}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="report-form__secondary"
+            onClick={resetForm}
+            disabled={loading}
+          >
+            Clear form
+          </button>
+        )}
       </div>
     </form>
   );

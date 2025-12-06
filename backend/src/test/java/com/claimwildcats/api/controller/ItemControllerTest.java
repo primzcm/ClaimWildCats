@@ -13,6 +13,7 @@ import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.domain.UserProfile;
 import com.claimwildcats.api.domain.UserRole;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.claimwildcats.api.service.ItemService;
 import com.claimwildcats.api.service.UserService;
@@ -87,5 +88,18 @@ class ItemControllerTest {
     void updateStatus_requiresAuthentication() {
         assertThrows(AccessDeniedException.class,
                 () -> controller.updateStatus("item-1", new UpdateItemStatusRequest(ItemStatus.CLAIMED, "done")));
+    }
+
+    @Test
+    void updateItem_requiresAuthentication() {
+        UpdateItemRequest request = new UpdateItemRequest(
+                "Updated title",
+                "Updated description",
+                "Updated location",
+                CampusZone.LIBRARY,
+                Instant.now(),
+                List.of("tag1"),
+                List.of());
+        assertThrows(AccessDeniedException.class, () -> controller.updateItem("item-1", request));
     }
 }

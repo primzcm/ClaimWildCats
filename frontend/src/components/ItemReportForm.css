@@ -48,6 +48,11 @@
   color: var(--color-burgundy-dark);
 }
 
+.report-form__files--readonly {
+  font-weight: 400;
+  color: var(--muted-color);
+}
+
 .report-form__files input[type="file"] {
   font: inherit;
   background: transparent;
@@ -72,6 +77,10 @@
   border-radius: 12px;
   padding: 0.55rem 0.75rem;
   font-weight: 500;
+}
+
+.report-form__file-item--existing {
+  border-style: solid;
 }
 
 .report-form__file-item span {
