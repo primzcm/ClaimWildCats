@@ -10,9 +10,12 @@ import static org.mockito.Mockito.when;
 import com.claimwildcats.api.domain.CampusZone;
 import com.claimwildcats.api.domain.ItemDetail;
 import com.claimwildcats.api.domain.ItemStatus;
+import com.claimwildcats.api.domain.UserProfile;
+import com.claimwildcats.api.domain.UserRole;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.claimwildcats.api.service.ItemService;
+import com.claimwildcats.api.service.UserService;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +27,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class ItemControllerTest {
 
     private final ItemService itemService = mock(ItemService.class);
-    private final ItemController controller = new ItemController(itemService);
+    private final UserService userService = mock(UserService.class);
+    private final ItemController controller = new ItemController(itemService, userService);
 
     @AfterEach
     void clearSecurityContext() {
@@ -49,6 +53,9 @@ class ItemControllerTest {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("user-7", "token");
         authentication.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserProfile profile = new UserProfile(
+                "user-7", "wildcat7", "User Seven", "user7@campus.edu", UserRole.USER, true, 0, 0, Instant.now());
+        when(userService.getProfile("user-7")).thenReturn(profile);
         ItemDetail detail = new ItemDetail(
                 "item-1",
                 "Laptop",
@@ -60,8 +67,9 @@ class ItemControllerTest {
                 Instant.now(),
                 List.of("electronics"),
                 List.of(),
-                "user-7");
-        when(itemService.createLostItem(any(), eq("user-7"))).thenReturn(detail);
+                "user-7",
+                "wildcat7");
+        when(itemService.createLostItem(any(), eq("user-7"), eq("wildcat7"))).thenReturn(detail);
 
         ItemDetail response = controller.reportLost(new CreateLostItemRequest(
                 "Laptop",

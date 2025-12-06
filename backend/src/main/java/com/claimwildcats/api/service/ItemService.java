@@ -79,16 +79,16 @@ public class ItemService {
                 .orElseGet(() -> stubDetail(id));
     }
 
-    public ItemDetail createLostItem(CreateLostItemRequest request, String reporterId) {
+    public ItemDetail createLostItem(CreateLostItemRequest request, String reporterId, String reporterUsername) {
         return firebaseFacade.getFirestore()
-                .map(firestore -> persistItem(firestore, request, reporterId, ItemStatus.LOST))
-                .orElseGet(() -> fallbackCreate(request, reporterId, ItemStatus.LOST));
+                .map(firestore -> persistItem(firestore, request, reporterId, reporterUsername, ItemStatus.LOST))
+                .orElseGet(() -> fallbackCreate(request, reporterId, reporterUsername, ItemStatus.LOST));
     }
 
-    public ItemDetail createFoundItem(CreateFoundItemRequest request, String reporterId) {
+    public ItemDetail createFoundItem(CreateFoundItemRequest request, String reporterId, String reporterUsername) {
         return firebaseFacade.getFirestore()
-                .map(firestore -> persistItem(firestore, request, reporterId, ItemStatus.FOUND))
-                .orElseGet(() -> fallbackCreate(request, reporterId, ItemStatus.FOUND));
+                .map(firestore -> persistItem(firestore, request, reporterId, reporterUsername, ItemStatus.FOUND))
+                .orElseGet(() -> fallbackCreate(request, reporterId, reporterUsername, ItemStatus.FOUND));
     }
 
     public ItemDetail updateStatus(String id, UpdateItemStatusRequest request, String currentUserId) {
@@ -110,7 +110,8 @@ public class ItemService {
                             Instant.now(),
                             existing.tags(),
                             existing.docUrls(),
-                            existing.reporterId());
+                            existing.reporterId(),
+                            existing.reporterUsername());
                 });
     }
 
@@ -300,7 +301,7 @@ public class ItemService {
     }
 
     private ItemDetail persistItem(
-            Firestore firestore, Object request, String reporterId, ItemStatus status) {
+            Firestore firestore, Object request, String reporterId, String reporterUsername, ItemStatus status) {
         CollectionReference collection = firestore.collection(COLLECTION);
         List<String> docUrls = docUrlsOf(request);
         String itemId = generateSequentialItemId(firestore);
@@ -317,6 +318,7 @@ public class ItemService {
         data.put("tags", tagsOf(request));
         data.put("docUrls", docUrls);
         data.put("reporterId", reporterId);
+        data.put("reporterUsername", reporterUsername);
         data.put("createdAt", timestampOf(ZonedDateTime.now(CAMPUS_ZONE_ID).toInstant()));
 
         try {
@@ -447,7 +449,8 @@ public class ItemService {
                 toInstant(doc.getTimestamp("createdAt")),
                 tags,
                 docUrls,
-                doc.getString("reporterId"));
+                doc.getString("reporterId"),
+                doc.getString("reporterUsername"));
     }
 
     private List<String> extractStringList(DocumentSnapshot doc, String field) {
@@ -464,7 +467,7 @@ public class ItemService {
         return List.copyOf(values);
     }
 
-    private ItemDetail fallbackCreate(Object request, String reporterId, ItemStatus status) {
+    private ItemDetail fallbackCreate(Object request, String reporterId, String reporterUsername, ItemStatus status) {
         List<String> docUrls = docUrlsOf(request);
         String itemId = "%s-%s".formatted(status.name().toLowerCase(Locale.US), UUID.randomUUID());
         ensureDocUrlsMatchItem(docUrls, itemId);
@@ -480,7 +483,8 @@ public class ItemService {
                 now,
                 tagsOf(request),
                 docUrls,
-                reporterId);
+                reporterId,
+                reporterUsername);
     }
 
     private Instant toInstant(Timestamp timestamp) {
@@ -779,9 +783,9 @@ public class ItemService {
                 createdAt,
                 List.of("sample"),
                 List.of("https://example.com/image.jpg"),
+                "user-123",
                 "user-123");
     }
 }
-
 
 

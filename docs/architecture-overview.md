@@ -18,13 +18,13 @@
 
 - `items`
   - Document ID: `ITEM-000001`, `ITEM-000002`, ...
-  - Key fields: `title`, `description`, `status`, `campusZone`, `reporterId`, `createdAt`, `docUrls`.
+  - Key fields: `title`, `description`, `status`, `campusZone`, `reporterId`, `reporterUsername`, `createdAt`, `docUrls`.
 - `claims`
   - Document ID: `CLAIM-000001`, `CLAIM-000002`, ...
   - Key fields: `itemId` (references `items` doc ID), `claimantId`, `status`, `submittedAt`, `attachmentUrls`.
 - `users`
   - Document ID: Firebase auth UID.
-  - Key fields: `fullName`, `email`, `role`, `createdAt`.
+  - Key fields: `username`, `email`, `role`, `createdAt`.
 
 ## Suggested modules
 

@@ -43,6 +43,7 @@ class UserServiceTest {
     void getProfile_usesFirestoreDetailsWhenAvailable() throws Exception {
         DocumentSnapshot snapshot = mock(DocumentSnapshot.class);
         when(snapshot.exists()).thenReturn(true);
+        when(snapshot.getString("username")).thenReturn("jordanwildcat");
         when(snapshot.getString("fullName")).thenReturn("Jordan Wildcat");
         when(snapshot.getString("email")).thenReturn("jordan@campus.edu");
         when(snapshot.getBoolean("emailVerified")).thenReturn(true);
@@ -54,6 +55,7 @@ class UserServiceTest {
         when(userDocument.get()).thenReturn(future);
 
         UserProfile profile = userService.getProfile("user-1");
+        assertThat(profile.username()).isEqualTo("jordanwildcat");
         assertThat(profile.fullName()).isEqualTo("Jordan Wildcat");
         assertThat(profile.email()).isEqualTo("jordan@campus.edu");
         assertThat(profile.role()).isEqualTo(UserRole.ADMIN);

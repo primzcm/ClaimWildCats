@@ -182,6 +182,10 @@ export function ItemDetailsPage() {
             <dt>Reported</dt>
             <dd>{formatDate(item.createdAt)}</dd>
           </div>
+          <div>
+            <dt>Reported by</dt>
+            <dd>{item.reporterUsername || 'Unknown'}</dd>
+          </div>
         </dl>
 
         {tags.length > 0 ? (

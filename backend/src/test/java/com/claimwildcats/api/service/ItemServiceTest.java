@@ -73,9 +73,10 @@ class ItemServiceTest {
                 "docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"),
                 "tags", List.of("backpack", "laptop"),
                 "createdAt", Timestamp.now(),
-                "reporterId", "user-1"));
+                "reporterId", "user-1",
+                "reporterUsername", "wildcat1"));
 
-        ItemDetail detail = itemService.createLostItem(request, "user-1");
+        ItemDetail detail = itemService.createLostItem(request, "user-1", "wildcat1");
 
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
         org.mockito.Mockito.verify(document).set(captor.capture());
@@ -86,6 +87,7 @@ class ItemServiceTest {
                 .containsEntry("status", "LOST")
                 .containsEntry("campusZone", "Library")
                 .containsEntry("reporterId", "user-1")
+                .containsEntry("reporterUsername", "wildcat1")
                 .containsEntry("docUrls", List.of("gs://" + BUCKET + "/items/doc-1/evidence.jpg"));
 
         assertThat(detail.id()).isEqualTo("doc-1");
@@ -103,7 +105,7 @@ class ItemServiceTest {
                 List.of("backpack", "laptop"),
                 List.of("gs://someone-else/items/doc-1/evidence.jpg"));
 
-        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
+        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1", "wildcat1"));
     }
 
     @Test
@@ -117,7 +119,7 @@ class ItemServiceTest {
                 List.of("backpack", "laptop"),
                 List.of("gs://" + BUCKET + "/items/doc-1/evidence.txt"));
 
-        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1"));
+        assertThrows(IllegalArgumentException.class, () -> itemService.createLostItem(request, "user-1", "wildcat1"));
     }
 
     @Test
