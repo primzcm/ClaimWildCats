@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { auth } from './lib/firebase';
+import logo from './icons/logo.png';
 
 const primaryNav = [
   { to: '/home', label: 'Home', end: true },
@@ -22,12 +23,17 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f8f0e5] text-brown">
       <header className="bg-burgundy text-white shadow-soft">
-        <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
           <Link
             to="/"
             className="group flex items-center gap-2 rounded-full pr-2 text-lg font-extrabold uppercase tracking-[0.16em] text-white transition hover:text-gold"
           >
-            ClaimWildCats
+            <img
+              src={logo}
+              alt="ClaimWildCats"
+              className="h-14 w-auto"
+            />
+            <span className="sr-only">ClaimWildCats</span>
           </Link>
 
           <nav className="flex flex-1 items-center justify-center gap-6">

@@ -130,3 +130,7 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 ## 2025-12-07 - Base background refinement
 
 - Frontend: Updated the app-wide and hero canvas background to #f8f0e5 to align the landing with the revised palette (`App.jsx`, `HomePage.jsx`).
+
+## 2025-12-07 - Get Started hero refresh
+
+- Frontend: Redesigned the Get Started page to match the new marketing hero with the `getstarted.png` illustration, a three-step "How it works" card, and primary CTAs for creating lost and found reports (`GetStartedPage.jsx`, `GetStartedPage.css`).

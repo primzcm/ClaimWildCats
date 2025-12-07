@@ -128,10 +128,11 @@ export function HomePage() {
           <div className="space-y-8">
             <p className="text-sm font-semibold uppercase tracking-[0.32em] text-burgundy">Campus Lost &amp; Found</p>
             <h1 className="text-5xl font-extrabold leading-[1.02] tracking-tight text-brown md:text-6xl lg:text-7xl">
-              ClaimWildcats: Campus Lost &amp; Found.
+              ClaimWildCats:
+              Find &amp; Recover With Ease
             </h1>
             <p className="max-w-xl text-lg text-brown/80">
-              Find &amp; Recover With Ease. Your dedicated campus service.
+              Designed to make reporting and recovering lost or found items on campus easier and faster.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
