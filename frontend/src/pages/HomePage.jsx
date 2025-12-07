@@ -4,6 +4,7 @@ import { getDownloadURL, ref as storageRef } from 'firebase/storage';
 import heroIllustration from '../icons/front.png';
 import { api } from '../api/client';
 import { storage } from '../lib/firebase';
+import './HomePage.css';
 
 const formatter = new Intl.DateTimeFormat('en-PH', {
   dateStyle: 'medium',
@@ -51,7 +52,7 @@ async function resolveFirstImage(docUrls = []) {
 
 const STATUS_STYLES = {
   lost: 'bg-[#fce5e2] text-[#b42318]',
-  found: 'bg-[#dff7e3] text-[#0f6b2f]',
+  found: 'bg-[#f2c046] text-[#3d0000]',
   claimed: 'bg-[#fef3c7] text-[#92400e]',
 };
 
@@ -121,10 +122,10 @@ export function HomePage() {
   }, [items]);
 
   return (
-    <div className="space-y-24">
+    <div className="space-y-16 md:space-y-20">
       <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f8f0e5]">
-        <div className="mx-auto grid max-w-7xl items-center gap-20 px-6 py-20 sm:px-12 lg:grid-cols-[1.05fr_1fr] lg:py-28">
-          <div className="space-y-10">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 sm:px-12 lg:grid-cols-[1.05fr_1fr] lg:py-20">
+          <div className="space-y-8">
             <p className="text-sm font-semibold uppercase tracking-[0.32em] text-burgundy">Campus Lost &amp; Found</p>
             <h1 className="text-5xl font-extrabold leading-[1.02] tracking-tight text-brown md:text-6xl lg:text-7xl">
               ClaimWildcats: Campus Lost &amp; Found.
@@ -135,13 +136,13 @@ export function HomePage() {
             <div className="flex flex-wrap gap-4">
               <Link
                 to="/items/new/lost"
-                className="rounded-full bg-burgundy px-6 py-3 text-base font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-burgundy"
+                className="home-hero-btn home-hero-btn--lost rounded-full px-6 py-3 text-base font-semibold shadow-soft transition hover:-translate-y-0.5 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-burgundy"
               >
                 Report Lost
               </Link>
               <Link
                 to="/items/new/found"
-                className="rounded-full bg-brown px-6 py-3 text-base font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brown"
+                className="home-hero-btn home-hero-btn--found rounded-full px-6 py-3 text-base font-semibold shadow-soft transition hover:-translate-y-0.5 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brown"
               >
                 Report Found
               </Link>
@@ -163,7 +164,7 @@ export function HomePage() {
       </section>
 
       <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#3E0703] text-white">
-        <div className="mx-auto max-w-5xl px-6 py-10 sm:px-8 lg:py-12">
+        <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 lg:py-10">
           <header className="flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-2xl font-bold leading-tight text-white">Recent Activity</h2>
             <Link
@@ -191,7 +192,7 @@ export function HomePage() {
                   <Link
                     key={item.id}
                     to={`/items/${item.id}`}
-                    className="grid h-full min-h-[22rem] grid-rows-[11rem_1fr] overflow-hidden rounded-xl bg-white text-left text-brown shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                    className="home-activity-card grid h-full min-h-[20rem] grid-rows-[11rem_1fr] overflow-hidden rounded-xl bg-white text-left text-brown transition hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                   >
                     <div className="relative h-48 w-full overflow-hidden bg-white">
                       {imageSrc ? (
@@ -207,13 +208,13 @@ export function HomePage() {
                         {statusLabel}
                       </span>
                     </div>
-                    <div className="flex flex-col justify-between gap-2 px-4 py-4">
+                    <div className="flex flex-col gap-1 px-4 pt-8 pb-4">
                       <h3 className="text-lg font-semibold leading-tight">{item.title}</h3>
                       <p className="text-sm text-brown/70">
                         {item.locationText}
                         {item.campusZone ? <span className="text-brown/60"> • {item.campusZone}</span> : null}
                       </p>
-                      <p className="text-xs font-medium text-brown/60">Last updated: {formatDate(item.createdAt)}</p>
+                      <p className="mt-3 text-xs font-medium text-brown/60">Last updated: {formatDate(item.createdAt)}</p>
                     </div>
                   </Link>
                 );
