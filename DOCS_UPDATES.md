@@ -96,3 +96,37 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Backend: Added `UpdateItemRequest` DTO and a `PATCH /api/items/{id}` endpoint so reporters can update existing lost/found reports (title, description, location, campus zone, last-seen time, tags, and docUrls) while enforcing ownership and storage path validation.
 - Frontend: Extended `ItemReportForm` with an `edit` variant and wired it into `ItemDetailsPage` so reporters can edit their own reports inline on the details view without leaving the page; kept styling consistent with existing forms and detail cards.
+
+## 2025-12-07 - Home page concept refresh
+
+- Frontend: Added Tailwind CSS build pipeline and palette (`tailwind.config.js`, `postcss.config.js`, `src/index.css`) and updated the app shell to the cream/burgundy brand treatment.
+- Frontend: Refactored `HomePage.jsx` to a Tailwind-based hero with the campus illustration (`src/icons/front.png`) and a burgundy recent-activity grid with rich item cards pulling preview images from uploaded doc URLs.
+- Docs: Logged this update here for visibility.
+
+## 2025-12-07 - Home page spacing and cards polish
+
+- Frontend: Matched the Recent Activity and footer backgrounds to dark burgundy, removed the gap before the footer, and tightened the card styling to pure-white, taller trading-card proportions with a 50/50 image/text split (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Home hero and feed sizing tweak
+
+- Frontend: Enlarged the hero headline, set Recent Activity text to white, shrunk the feed padding/cards slightly, and aligned the feed/footer background to the header burgundy for a seamless band (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Home hero unboxed and card color fix
+
+- Frontend: Removed the hero card wrapper so the cream background spans full width with a max-w-7xl two-column layout and enlarged illustration; ensured Recent Activity cards are fully white (no beige top) with gray placeholders for missing images, and kept the burgundy feed/footer as a continuous block (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Hero scale and palette tweak
+
+- Frontend: Expanded the hero into a wide landing spread on a #FFF0C4 canvas with larger spacing/illustration, shifted the feed/footer background to #3E0703, and kept Recent Activity cards pure white with gray placeholders (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Header/footer alignment
+
+- Frontend: Matched the footer background back to the header burgundy while keeping Recent Activity as a darker band with no gap between them (`App.jsx`).
+
+## 2025-12-07 - Landing palette and header cleanup
+
+- Frontend: Swapped the base background to #F9F4EB, enlarged the hero illustration for a more open landing feel, and removed the header’s CW badge while keeping the brand wordmark prominent (`App.jsx`, `HomePage.jsx`).
+
+## 2025-12-07 - Base background refinement
+
+- Frontend: Updated the app-wide and hero canvas background to #f8f0e5 to align the landing with the revised palette (`App.jsx`, `HomePage.jsx`).
