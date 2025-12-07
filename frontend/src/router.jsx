@@ -13,7 +13,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { MyReportsPage } from './pages/MyReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterUsernamePage';
+import { RegisterPage } from './pages/RegisterPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminUsersPage } from './pages/AdminUsersPage';
 import { AdminReportsPage } from './pages/AdminReportsPage';
