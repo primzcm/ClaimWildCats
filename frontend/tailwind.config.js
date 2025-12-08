@@ -4,12 +4,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream: '#FFFCF5',
+        cream: '#FFF0C4',
         burgundy: '#5B0000',
         burgundyDeep: '#3D0000',
         brown: '#2D1A12',
         gold: '#F2C046',
-        sand: '#F7EBDB',
+        sand: '#FFF0C4',
       },
       fontFamily: {
         sans: ['Inter', '"Segoe UI"', 'system-ui', 'sans-serif'],

@@ -7,7 +7,7 @@
   line-height: 1.5;
   font-weight: 400;
   color: #2d1a12;
-  background-color: #fffcf5;
+  background-color: #FFF0C4;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -17,8 +17,8 @@
   --color-burgundy: #5b0000;
   --color-red: #c73a27;
   --color-gold: #f2c046;
-  --color-cream: #fffcf5;
-  --surface-color: #fff7ec;
+  --color-cream: #fff0c4;
+  --surface-color: #fff0c4;
   --muted-color: rgba(45, 26, 18, 0.78);
   --border-color: rgba(91, 0, 0, 0.12);
   --panel-shadow: 0 28px 60px -38px rgba(91, 0, 0, 0.35);
