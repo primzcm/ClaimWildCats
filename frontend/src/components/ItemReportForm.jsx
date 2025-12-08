@@ -176,55 +176,59 @@ export function ItemReportForm({
     };
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (loading) return;
-    setLoading(true);
-    setError('');
-    setSuccess('');
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-    if (isEdit) {
-      let uploadedEntries = [];
-      try {
-        if (attachments.length > 0) {
-          uploadedEntries = await uploadFiles(`items/${itemId}`, attachments);
-        }
-        const newDocUrls = uploadedEntries.map((entry) => entry.storageUri);
-        const finalDocUrls = [...existingDocUrls, ...newDocUrls];
-        const payload = buildPayload(finalDocUrls);
-        const updated = await api(`/api/items/${itemId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        setSuccess('Changes saved.');
-        setAttachments([]);
-        setAttachmentMessage('');
-        if (typeof onSaved === 'function') {
-          onSaved(updated);
-        }
-      } catch (err) {
-        if (uploadedEntries.length > 0) {
-          await cleanupUploads(uploadedEntries);
-        }
-        setError(err?.message ?? 'Unable to update the report right now.');
-      } finally {
-        setLoading(false);
-      }
-      return;
+  if (loading) return;
+  setLoading(true);
+  setError('');
+  setSuccess('');
+
+  // Validate attachments
+  if (!isEdit && attachments.length === 0) {
+    setError('Adding photos is mandatory');
+    setLoading(false);
+    return;
+  }
+  if (isEdit && existingDocUrls.length + attachments.length === 0) {
+    setError('Adding photos is mandatory');
+    setLoading(false);
+    return;
+  }
+
+  let uploadedEntries = [];
+
+  try {
+    // Upload images in parallel
+    if (attachments.length > 0) {
+      uploadedEntries = await Promise.all(
+        attachments.map((att) => uploadFiles(`items/${isEdit ? itemId : draftItemId}`, [att]))
+      );
+      // Flatten the results if uploadFiles returns an array per attachment
+      uploadedEntries = uploadedEntries.flat();
     }
 
-    let uploadedEntries = [];
-    try {
-      uploadedEntries = await uploadFiles(`items/${draftItemId}`, attachments);
-      const payload = buildPayload(uploadedEntries.map((entry) => entry.storageUri));
+    const newDocUrls = uploadedEntries.map((entry) => entry.storageUri);
+    const finalDocUrls = isEdit ? [...existingDocUrls, ...newDocUrls] : newDocUrls;
+    const payload = buildPayload(finalDocUrls);
+
+    if (isEdit) {
+      const updated = await api(`/api/items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      setSuccess('Changes saved.');
+      setAttachments([]);
+      setAttachmentMessage('');
+      if (typeof onSaved === 'function') onSaved(updated);
+    } else {
       const endpoint = isLost ? '/api/items/lost' : '/api/items/found';
       const created = await api(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       setSuccess('Report submitted! Redirecting to the item page...');
       setTimeout(() => {
         resetForm();
@@ -234,17 +238,19 @@ export function ItemReportForm({
           navigate('/me/reports');
         }
       }, 800);
-    } catch (err) {
-      await cleanupUploads(uploadedEntries);
-      if (err && err.code === 'storage/unauthorized') {
-        setError('We could not upload your images because storage access was denied. Try signing in again.');
-      } else {
-        setError(err?.message ?? 'Unable to submit the report right now.');
-      }
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    await cleanupUploads(uploadedEntries);
+    if (err && err.code === 'storage/unauthorized') {
+      setError('We could not upload your images because storage access was denied. Try signing in again.');
+    } else {
+      setError(err?.message ?? 'Unable to submit the report right now.');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <form className="report-form" onSubmit={handleSubmit}>
