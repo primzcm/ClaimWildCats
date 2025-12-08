@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from './context/AuthContext';
 import { auth } from './lib/firebase';
 import logo from './icons/logo.png';
+import './App.css';
 
 const primaryNav = [
   { to: '/home', label: 'Home', end: true },
@@ -22,7 +23,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8f0e5] text-brown">
-      <header className="bg-burgundy text-white shadow-soft">
+      <header className="bg-burgundyDeep text-cream shadow-soft">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
           <Link
             to="/"
@@ -96,7 +97,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="bg-burgundy text-cream">
+      <footer className="bg-burgundyDeep text-cream">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 py-6 text-center text-sm">
           <div className="flex flex-wrap items-center justify-center gap-4 font-semibold">
             <Link to="/faq" className="hover:text-gold">
