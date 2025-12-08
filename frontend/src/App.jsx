@@ -21,7 +21,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f0e5] text-brown">
+    <div className="min-h-screen flex flex-col bg-[#f8f0e5] text-brown">
       <header className="bg-burgundy text-white shadow-soft">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
           <Link
