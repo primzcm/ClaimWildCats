@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { api } from '../api/client';
 import './LoginPage.css';
@@ -11,32 +11,54 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [roleCode, setRoleCode] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState([]); // array for multiple errors
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const validateUsername = (username) => /^[a-zA-Z0-9 ]+$/.test(username);
+
+  const validatePassword = (password) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])([^\s]{8,})$/.test(password);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (loading) return;
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
 
+    const newErrors = [];
+
+    // Username validation
     const trimmedUsername = username.trim();
-    if (!trimmedUsername) {
-      setError('Choose a username to continue.');
+    if (!trimmedUsername) newErrors.push('Choose a username to continue.');
+    else if (!validateUsername(trimmedUsername))
+      newErrors.push('Username can only contain letters, numbers, and spaces.');
+
+    // Email validation
+    if (!email.toLowerCase().endsWith('@cit.edu'))
+      newErrors.push('Enter a valid institutional email.');
+
+    // Password validation
+    if (!validatePassword(password))
+      newErrors.push(
+        'Password must be at least 8 characters long, include uppercase and lowercase letters, a number, a special character, and no spaces.'
+      );
+
+    // Password match
+    if (password !== confirmPassword) newErrors.push('Passwords do not match.');
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setLoading(true);
-    setError('');
+    setErrors([]);
     setSuccess('');
 
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: trimmedUsername });
+
+      // Persist username via API (best-effort)
       try {
         await api('/api/users/me/profile', {
           method: 'PUT',
@@ -44,25 +66,18 @@ export function RegisterPage() {
           body: JSON.stringify({ username: trimmedUsername }),
         });
       } catch (profileError) {
-        // Profile persistence is best-effort; log and continue.
         console.warn('Could not persist user profile', profileError);
       }
-      try {
-        await sendEmailVerification(credential.user);
-      } catch (verificationError) {
-        console.warn('Could not send verification email', verificationError);
-      }
 
-      // TODO: persist roleCode in Firestore once roles are implemented.
-      setSuccess('Account created! Check your email for a verification link, then log in.');
+      setSuccess('Account created! You can now log in.');
       setUsername('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      setRoleCode('');
+
       setTimeout(() => navigate('/auth/login'), 1500);
     } catch (err) {
-      setError(err?.message ?? 'Unable to create account.');
+      setErrors([err?.message ?? 'Unable to create account.']);
     } finally {
       setLoading(false);
     }
@@ -80,58 +95,64 @@ export function RegisterPage() {
             <input
               type="text"
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               placeholder="wildcat123"
               required
             />
           </label>
+
           <label className="auth-label">
             Email
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              placeholder="wildcat@campus.edu"
+              placeholder="wildcat@cit.edu"
               required
             />
           </label>
+
           <label className="auth-label">
             Password
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
+              placeholder="At least 8 chars, mix letters, number & symbol"
               required
             />
           </label>
+
           <label className="auth-label">
             Confirm password
             <input
               type="password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
               required
             />
           </label>
-          <label className="auth-label">
-            Role code <span className="auth-label__hint">(optional)</span>
-            <input
-              type="text"
-              value={roleCode}
-              onChange={(event) => setRoleCode(event.target.value.trim())}
-              placeholder="e.g. ADMIN-2025"
-            />
-          </label>
+
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        {error && <p className="auth-error">{error}</p>}
+        {/* Display all errors with numbering */}
+        {errors.length > 0 && (
+          <div className="auth-error">
+            {errors.map((err, idx) => (
+              <p key={idx} style={{ marginBottom: '0.5em' }}>
+                {idx + 1}. {err}
+              </p>
+            ))}
+          </div>
+        )}
+
         {success && <p className="auth-success">{success}</p>}
 
         <p className="auth-footer">
@@ -141,4 +162,3 @@ export function RegisterPage() {
     </section>
   );
 }
-
