@@ -7,9 +7,12 @@ import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
+import com.claimwildcats.api.domain.UserProfile;
 import com.claimwildcats.api.security.SecurityUtils;
 import com.claimwildcats.api.service.ItemService;
+import com.claimwildcats.api.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -35,8 +38,11 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    public ItemController(ItemService itemService) {
+    private final UserService userService;
+
+    public ItemController(ItemService itemService, UserService userService) {
         this.itemService = itemService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -72,7 +78,8 @@ public class ItemController {
     public ItemDetail reportLost(@Valid @RequestBody CreateLostItemRequest request) {
         String reporterId = SecurityUtils.currentUserId()
                 .orElseThrow(() -> new AccessDeniedException("Authentication required"));
-        return itemService.createLostItem(request, reporterId);
+        UserProfile profile = userService.getProfile(reporterId);
+        return itemService.createLostItem(request, reporterId, profile.username());
     }
 
     @PostMapping("/found")
@@ -81,7 +88,16 @@ public class ItemController {
     public ItemDetail reportFound(@Valid @RequestBody CreateFoundItemRequest request) {
         String reporterId = SecurityUtils.currentUserId()
                 .orElseThrow(() -> new AccessDeniedException("Authentication required"));
-        return itemService.createFoundItem(request, reporterId);
+        UserProfile profile = userService.getProfile(reporterId);
+        return itemService.createFoundItem(request, reporterId, profile.username());
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update item", description = "Owners can edit an existing lost or found report.")
+    public ItemDetail updateItem(@PathVariable String id, @Valid @RequestBody UpdateItemRequest request) {
+        String currentUser = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return itemService.updateItem(id, request, currentUser);
     }
 
     @PatchMapping("/{id}/status")

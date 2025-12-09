@@ -1,126 +1,154 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { api } from '../api/client';
+import CatLogo from '../icons/CatLogo.png';
 import './LoginPage.css';
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [roleCode, setRoleCode] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState([]);
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const validateUsername = (username) => /^[a-zA-Z0-9 ]+$/.test(username);
+  const validatePassword = (password) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])([^\s]{8,})$/.test(password);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (loading) return;
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+
+    const newErrors = [];
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername)
+      newErrors.push("Choose a username to continue.");
+    else if (!validateUsername(trimmedUsername))
+      newErrors.push("Username can only contain letters, numbers, and spaces.");
+
+    if (!email.toLowerCase().endsWith("@cit.edu"))
+      newErrors.push("Enter a valid institutional email.");
+
+    if (!validatePassword(password))
+      newErrors.push(
+        "Password must be at least 8 characters long, include uppercase and lowercase letters, a number, a special character, and no spaces."
+      );
+
+    if (password !== confirmPassword)
+      newErrors.push("Passwords do not match.");
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setLoading(true);
-    setError('');
+    setErrors([]);
     setSuccess('');
 
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
-      if (displayName) {
-        await updateProfile(credential.user, { displayName });
-      }
-      try {
-        await sendEmailVerification(credential.user);
-      } catch (verificationError) {
-        console.warn('Could not send verification email', verificationError);
-      }
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: trimmedUsername });
 
-      // TODO: persist roleCode in Firestore once roles are implemented.
-      setSuccess('Account created! Check your email for a verification link, then log in.');
-      setDisplayName('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setRoleCode('');
-      setTimeout(() => navigate('/auth/login'), 1500);
+      try {
+        await api("/api/users/me/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: trimmedUsername }),
+        });
+      } catch (_) {}
+
+      setSuccess("Account created! You may now log in.");
+
+      setTimeout(() => navigate("/auth/login"), 1500);
     } catch (err) {
-      setError(err?.message ?? 'Unable to create account.');
+      setErrors([err?.message ?? "Unable to create account."]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="auth-shell">
-      <div className="auth-card">
-        <h1>Register</h1>
-        <p className="auth-subtitle">Create an account to manage reports, claims, and notifications.</p>
+    <section className="login-shell">
+      
+      {/* LEFT CAT IMAGE */}
+      <div className="login-cat">
+        <img src={CatLogo} alt="Cat Logo" />
+      </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-label">
-            Full name
+      {/* RIGHT FORM CARD */}
+      <div className="login-card">
+        <h1 className="reg-title">CREATE ACCOUNT</h1>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          
+          <label className="login-label">
+            Username
             <input
               type="text"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              autoComplete="name"
-              placeholder="Jordan Wildcat"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your username"
               required
             />
           </label>
-          <label className="auth-label">
-            Email
+
+          <label className="login-label">
+            Institutional Email
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              placeholder="wildcat@campus.edu"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ex: juandelacruz@cit.edu"
               required
             />
           </label>
-          <label className="auth-label">
+
+          <label className="login-label">
             Password
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="new-password"
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </label>
-          <label className="auth-label">
-            Confirm password
+
+          <label className="login-label">
+            Confirm Password
             <input
               type="password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              autoComplete="new-password"
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </label>
-          <label className="auth-label">
-            Role code <span className="auth-label__hint">(optional)</span>
-            <input
-              type="text"
-              value={roleCode}
-              onChange={(event) => setRoleCode(event.target.value.trim())}
-              placeholder="e.g. ADMIN-2025"
-            />
-          </label>
-          <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Creating account…' : 'Create account'}
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? "Creatingâ€¦" : "Create Account"}
           </button>
         </form>
 
-        {error && <p className="auth-error">{error}</p>}
-        {success && <p className="auth-success">{success}</p>}
+        {errors.length > 0 && (
+          <div className="login-error">
+            <ul>
+              {errors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        <p className="auth-footer">
-          Have an account? <Link to="/auth/login">Log in</Link>
+        {success && <p className="login-success">{success}</p>}
+
+        <p className="login-footer">
+          Already have an account? <Link to="/auth/login">Log in</Link>
         </p>
       </div>
     </section>

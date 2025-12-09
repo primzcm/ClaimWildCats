@@ -235,7 +235,7 @@ export function ClaimItemPage() {
             </div>
             <div>
               <dt>Reporter</dt>
-              <dd>{item.reporterId ? item.reporterId : 'Unknown'}</dd>
+              <dd>{item.reporterUsername ? item.reporterUsername : 'Unknown'}</dd>
             </div>
           </dl>
         </section>

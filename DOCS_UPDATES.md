@@ -78,4 +78,65 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Backend: Introduced `ClaimDetail` + `ClaimDecisionRequest`, tightened `ClaimController` access rules, enforced attachment path validation, duplicate-claim checks, and reviewer decisions that auto-mark approved items as `CLAIMED`.
 - Frontend: Added a full Claim Item form with Firebase Storage uploads, duplicate-claim detection, and contextual messaging; `MyReportsPage` now lists found reports and lets reporters approve/deny claims with reviewer notes.
+
+## 2025-12-09 - Friendlier API error messages
+
+- Backend: Added `GlobalExceptionHandler` to map `IllegalArgumentException`/`IllegalStateException` into ProblemDetails 4xx responses with clear `detail` messages instead of generic 500s.
+- Backend: Enabled `server.error.include-message=always` so Spring Boot problem responses include exception details during development.
+- Frontend: Updated `src/api/client.js` to surface backend error `detail`/`message`/`error` fields (or response text) instead of only showing `500 Internal Server Error`, so cases like duplicate claims display a clear explanation to users.
 - Docs: Documented the claim process in `README.md` and logged these changes here.
+
+## 2025-12-06 - Sequential Firestore IDs
+
+- Backend: Updated `ItemService` and `ClaimService` to stop using Firestore auto-generated document IDs and instead assign human-readable, sequential identifiers (`ITEM-000001`, `CLAIM-000001`, etc.) using Firestore-backed counters.
+- Backend: Kept existing schemas and query patterns intact so controllers and clients continue to work, while making the Firestore console easier to navigate during reviews and debugging.
+- Docs: Documented the new ID strategy and core collections in `docs/architecture-overview.md`. Unable to update `docs/firebase-setup.md` via tooling due to an encoding issue, but the expected ID format is now `ITEM-000001` / `CLAIM-000001`.
+
+## 2025-12-06 - Usernames and reporterUsername
+
+- Frontend: Registration now asks for a username instead of full name and sends it to the backend after account creation so it can be stored as part of the user profile.
+- Backend: Extended `UserProfile` and `UserService` to track a `username` field, added `/api/users/me/profile` to update the authenticated user’s username, and updated `ItemService`/`ItemController` so each item stores both `reporterId` (UID) and `reporterUsername` (human-readable).
+- Docs: Updated `README.md` and `docs/architecture-overview.md` to describe the new username and `reporterUsername` fields used in Firestore.
+
+## 2025-12-06 - Inline report editing
+
+- Backend: Added `UpdateItemRequest` DTO and a `PATCH /api/items/{id}` endpoint so reporters can update existing lost/found reports (title, description, location, campus zone, last-seen time, tags, and docUrls) while enforcing ownership and storage path validation.
+- Frontend: Extended `ItemReportForm` with an `edit` variant and wired it into `ItemDetailsPage` so reporters can edit their own reports inline on the details view without leaving the page; kept styling consistent with existing forms and detail cards.
+
+## 2025-12-07 - Home page concept refresh
+
+- Frontend: Added Tailwind CSS build pipeline and palette (`tailwind.config.js`, `postcss.config.js`, `src/index.css`) and updated the app shell to the cream/burgundy brand treatment.
+- Frontend: Refactored `HomePage.jsx` to a Tailwind-based hero with the campus illustration (`src/icons/front.png`) and a burgundy recent-activity grid with rich item cards pulling preview images from uploaded doc URLs.
+- Docs: Logged this update here for visibility.
+
+## 2025-12-07 - Home page spacing and cards polish
+
+- Frontend: Matched the Recent Activity and footer backgrounds to dark burgundy, removed the gap before the footer, and tightened the card styling to pure-white, taller trading-card proportions with a 50/50 image/text split (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Home hero and feed sizing tweak
+
+- Frontend: Enlarged the hero headline, set Recent Activity text to white, shrunk the feed padding/cards slightly, and aligned the feed/footer background to the header burgundy for a seamless band (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Home hero unboxed and card color fix
+
+- Frontend: Removed the hero card wrapper so the cream background spans full width with a max-w-7xl two-column layout and enlarged illustration; ensured Recent Activity cards are fully white (no beige top) with gray placeholders for missing images, and kept the burgundy feed/footer as a continuous block (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Hero scale and palette tweak
+
+- Frontend: Expanded the hero into a wide landing spread on a #FFF0C4 canvas with larger spacing/illustration, shifted the feed/footer background to #3E0703, and kept Recent Activity cards pure white with gray placeholders (`HomePage.jsx`, `App.jsx`).
+
+## 2025-12-07 - Header/footer alignment
+
+- Frontend: Matched the footer background back to the header burgundy while keeping Recent Activity as a darker band with no gap between them (`App.jsx`).
+
+## 2025-12-07 - Landing palette and header cleanup
+
+- Frontend: Swapped the base background to #F9F4EB, enlarged the hero illustration for a more open landing feel, and removed the header’s CW badge while keeping the brand wordmark prominent (`App.jsx`, `HomePage.jsx`).
+
+## 2025-12-07 - Base background refinement
+
+- Frontend: Updated the app-wide and hero canvas background to #f8f0e5 to align the landing with the revised palette (`App.jsx`, `HomePage.jsx`).
+
+## 2025-12-07 - Get Started hero refresh
+
+- Frontend: Redesigned the Get Started page to match the new marketing hero with the `getstarted.png` illustration, a three-step "How it works" card, and primary CTAs for creating lost and found reports (`GetStartedPage.jsx`, `GetStartedPage.css`).

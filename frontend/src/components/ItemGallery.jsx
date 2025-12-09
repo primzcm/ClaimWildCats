@@ -158,6 +158,9 @@ export function ItemGallery({ items }) {
                   ) : null}
                 </p>
                 {snippet ? <p className="item-card__snippet">{snippet}</p> : null}
+                {item.reporterUsername ? (
+                  <p className="item-card__reporter">Reported by: {item.reporterUsername}</p>
+                ) : null}
                 <p className="item-card__updated">
                   Updated {new Date(item.createdAt).toLocaleString('en-PH', DATE_FORMAT_OPTIONS)}
                 </p>

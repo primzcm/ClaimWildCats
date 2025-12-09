@@ -14,5 +14,6 @@ public record ItemDetail(
         Instant createdAt,
         List<String> tags,
         List<String> docUrls,
-        String reporterId) {
+        String reporterId,
+        String reporterUsername) {
 }

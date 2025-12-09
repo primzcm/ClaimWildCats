@@ -8,6 +8,7 @@ import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.dto.CreateFoundItemRequest;
 import com.claimwildcats.api.dto.CreateLostItemRequest;
 import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemRequest;
 import com.claimwildcats.api.dto.UpdateItemStatusRequest;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.CollectionReference;
@@ -43,6 +44,9 @@ public class ItemService {
 
     private static final Logger log = LoggerFactory.getLogger(ItemService.class);
     private static final String COLLECTION = "items";
+    private static final String META_COLLECTION = "meta";
+    private static final String ITEMS_COUNTER_DOC = "itemsCounter";
+    private static final String COUNTER_FIELD = "nextNumber";
     private static final int MAX_FETCH = 200;
     private static final ZoneId CAMPUS_ZONE_ID = ZoneId.of("Asia/Manila");
 
@@ -76,16 +80,22 @@ public class ItemService {
                 .orElseGet(() -> stubDetail(id));
     }
 
-    public ItemDetail createLostItem(CreateLostItemRequest request, String reporterId) {
+    public ItemDetail createLostItem(CreateLostItemRequest request, String reporterId, String reporterUsername) {
         return firebaseFacade.getFirestore()
-                .map(firestore -> persistItem(firestore, request, reporterId, ItemStatus.LOST))
-                .orElseGet(() -> fallbackCreate(request, reporterId, ItemStatus.LOST));
+                .map(firestore -> persistItem(firestore, request, reporterId, reporterUsername, ItemStatus.LOST))
+                .orElseGet(() -> fallbackCreate(request, reporterId, reporterUsername, ItemStatus.LOST));
     }
 
-    public ItemDetail createFoundItem(CreateFoundItemRequest request, String reporterId) {
+    public ItemDetail createFoundItem(CreateFoundItemRequest request, String reporterId, String reporterUsername) {
         return firebaseFacade.getFirestore()
-                .map(firestore -> persistItem(firestore, request, reporterId, ItemStatus.FOUND))
-                .orElseGet(() -> fallbackCreate(request, reporterId, ItemStatus.FOUND));
+                .map(firestore -> persistItem(firestore, request, reporterId, reporterUsername, ItemStatus.FOUND))
+                .orElseGet(() -> fallbackCreate(request, reporterId, reporterUsername, ItemStatus.FOUND));
+    }
+
+    public ItemDetail updateItem(String id, UpdateItemRequest request, String currentUserId) {
+        return firebaseFacade.getFirestore()
+                .map(firestore -> updateItemInternal(firestore, id, request, currentUserId))
+                .orElseGet(() -> fallbackUpdateItem(id, request, currentUserId));
     }
 
     public ItemDetail updateStatus(String id, UpdateItemStatusRequest request, String currentUserId) {
@@ -107,7 +117,8 @@ public class ItemService {
                             Instant.now(),
                             existing.tags(),
                             existing.docUrls(),
-                            existing.reporterId());
+                            existing.reporterId(),
+                            existing.reporterUsername());
                 });
     }
 
@@ -297,15 +308,12 @@ public class ItemService {
     }
 
     private ItemDetail persistItem(
-            Firestore firestore, Object request, String reporterId, ItemStatus status) {
+            Firestore firestore, Object request, String reporterId, String reporterUsername, ItemStatus status) {
         CollectionReference collection = firestore.collection(COLLECTION);
         List<String> docUrls = docUrlsOf(request);
-        String resolvedItemId = resolveItemIdFromUrls(docUrls);
-        DocumentReference doc = resolvedItemId != null ? collection.document(resolvedItemId) : collection.document();
-        String itemId = doc.getId();
-        if (!docUrls.isEmpty()) {
-            ensureDocUrlsMatchItem(docUrls, itemId);
-        }
+        String itemId = generateSequentialItemId(firestore);
+        DocumentReference doc = collection.document(itemId);
+        ensureDocUrlsMatchItem(docUrls, itemId);
 
         Map<String, Object> data = new HashMap<>();
         data.put("title", titleOf(request));
@@ -317,6 +325,7 @@ public class ItemService {
         data.put("tags", tagsOf(request));
         data.put("docUrls", docUrls);
         data.put("reporterId", reporterId);
+        data.put("reporterUsername", reporterUsername);
         data.put("createdAt", timestampOf(ZonedDateTime.now(CAMPUS_ZONE_ID).toInstant()));
 
         try {
@@ -351,6 +360,60 @@ public class ItemService {
             if (request.note() != null && !request.note().isBlank()) {
                 updates.put("statusNote", request.note());
             }
+            document.set(updates, SetOptions.merge()).get();
+            DocumentSnapshot refreshed = document.get().get();
+            return mapDetail(refreshed);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while updating item", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Failed to update item in Firestore", e);
+        }
+    }
+
+    private ItemDetail updateItemInternal(
+            Firestore firestore, String id, UpdateItemRequest request, String currentUserId) {
+        try {
+            DocumentReference document = firestore.collection(COLLECTION).document(id);
+            DocumentSnapshot snapshot = document.get().get();
+            if (!snapshot.exists()) {
+                throw new IllegalArgumentException("Item not found: " + id);
+            }
+            ItemDetail detail = mapDetail(snapshot);
+            if (!Objects.equals(detail.reporterId(), currentUserId)) {
+                throw new AccessDeniedException("You can only update your own reports");
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            if (request.title() != null) {
+                updates.put("title", request.title());
+            }
+            if (request.description() != null) {
+                updates.put("description", request.description());
+            }
+            if (request.locationText() != null) {
+                updates.put("locationText", request.locationText());
+            }
+            if (request.campusZone() != null) {
+                updates.put("campusZone", request.campusZone().getJsonValue());
+            }
+            if (request.lastSeenAt() != null) {
+                updates.put("lastSeenAt", timestampOf(request.lastSeenAt()));
+            }
+            if (request.tags() != null) {
+                updates.put("tags", cleanTags(request.tags()));
+            }
+            if (request.docUrls() != null) {
+                List<String> docUrls = cleanDocUrls(request.docUrls());
+                if (!docUrls.isEmpty()) {
+                    ensureDocUrlsMatchItem(docUrls, id);
+                }
+                updates.put("docUrls", docUrls);
+            }
+            if (updates.isEmpty()) {
+                return detail;
+            }
+            updates.put("updatedAt", Timestamp.now());
             document.set(updates, SetOptions.merge()).get();
             DocumentSnapshot refreshed = document.get().get();
             return mapDetail(refreshed);
@@ -447,7 +510,8 @@ public class ItemService {
                 toInstant(doc.getTimestamp("createdAt")),
                 tags,
                 docUrls,
-                doc.getString("reporterId"));
+                doc.getString("reporterId"),
+                doc.getString("reporterUsername"));
     }
 
     private List<String> extractStringList(DocumentSnapshot doc, String field) {
@@ -464,14 +528,10 @@ public class ItemService {
         return List.copyOf(values);
     }
 
-    private ItemDetail fallbackCreate(Object request, String reporterId, ItemStatus status) {
+    private ItemDetail fallbackCreate(Object request, String reporterId, String reporterUsername, ItemStatus status) {
         List<String> docUrls = docUrlsOf(request);
-        String itemId = resolveItemIdFromUrls(docUrls);
-        if (itemId == null) {
-            itemId = "%s-%s".formatted(status.name().toLowerCase(Locale.US), UUID.randomUUID());
-        } else {
-            ensureDocUrlsMatchItem(docUrls, itemId);
-        }
+        String itemId = "%s-%s".formatted(status.name().toLowerCase(Locale.US), UUID.randomUUID());
+        ensureDocUrlsMatchItem(docUrls, itemId);
         Instant now = ZonedDateTime.now(CAMPUS_ZONE_ID).toInstant();
         return new ItemDetail(
                 itemId,
@@ -484,7 +544,8 @@ public class ItemService {
                 now,
                 tagsOf(request),
                 docUrls,
-                reporterId);
+                reporterId,
+                reporterUsername);
     }
 
     private Instant toInstant(Timestamp timestamp) {
@@ -559,6 +620,10 @@ public class ItemService {
         } else {
             tags = List.of();
         }
+        return cleanTags(tags);
+    }
+
+    private List<String> cleanTags(List<String> tags) {
         if (tags == null) {
             return List.of();
         }
@@ -583,6 +648,10 @@ public class ItemService {
         } else {
             docUrls = List.of();
         }
+        return cleanDocUrls(docUrls);
+    }
+
+    private List<String> cleanDocUrls(List<String> docUrls) {
         if (docUrls == null) {
             return List.of();
         }
@@ -598,36 +667,74 @@ public class ItemService {
         return List.copyOf(cleaned);
     }
 
+    private ItemDetail fallbackUpdateItem(String id, UpdateItemRequest request, String currentUserId) {
+        ItemDetail existing = findById(id);
+        if (!Objects.equals(existing.reporterId(), currentUserId)) {
+            throw new AccessDeniedException("You can only update your own reports");
+        }
+        String title = request.title() != null ? request.title() : existing.title();
+        String description = request.description() != null ? request.description() : existing.description();
+        String locationText = request.locationText() != null ? request.locationText() : existing.locationText();
+        CampusZone campusZone = request.campusZone() != null ? request.campusZone() : existing.campusZone();
+        Instant lastSeenAt = request.lastSeenAt() != null ? request.lastSeenAt() : existing.lastSeenAt();
+        List<String> tags = request.tags() != null ? cleanTags(request.tags()) : existing.tags();
+        List<String> docUrls = request.docUrls() != null ? cleanDocUrls(request.docUrls()) : existing.docUrls();
+        if (request.docUrls() != null && !docUrls.isEmpty()) {
+            ensureDocUrlsMatchItem(docUrls, existing.id());
+        }
+        return new ItemDetail(
+                existing.id(),
+                title,
+                description,
+                existing.status(),
+                locationText,
+                campusZone,
+                lastSeenAt,
+                existing.createdAt(),
+                tags,
+                docUrls,
+                existing.reporterId(),
+                existing.reporterUsername());
+    }
+
     private String safeLower(String value) {
         return value == null ? null : value.toLowerCase(Locale.US);
     }
 
-    private String resolveItemIdFromUrls(List<String> docUrls) {
-        if (docUrls.isEmpty()) {
-            return null;
+    private String generateSequentialItemId(Firestore firestore) {
+        try {
+            Long nextNumber = firestore.runTransaction(transaction -> {
+                        DocumentReference counterRef =
+                                firestore.collection(META_COLLECTION).document(ITEMS_COUNTER_DOC);
+                        DocumentSnapshot snapshot = transaction.get(counterRef).get();
+                        long current;
+                        if (snapshot.exists() && snapshot.contains(COUNTER_FIELD)) {
+                            Long stored = snapshot.getLong(COUNTER_FIELD);
+                            current = stored != null ? stored : 1L;
+                        } else {
+                            current = 1L;
+                        }
+                        long assigned = current;
+                        Map<String, Object> update = new HashMap<>();
+                        update.put(COUNTER_FIELD, current + 1);
+                        transaction.set(counterRef, update);
+                        return assigned;
+                    })
+                    .get();
+            return String.format("ITEM-%06d", nextNumber);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while generating item id", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Failed to generate item id", e);
         }
-        String bucket = firebaseProperties.getStorageBucket();
-        requireStorageBucketConfigured(bucket);
-        String resolvedId = null;
-        for (String docUrl : docUrls) {
-            String itemId = parseItemIdAndValidate(docUrl, bucket);
-            if (resolvedId == null) {
-                resolvedId = itemId;
-            } else if (!resolvedId.equals(itemId)) {
-                throw new IllegalArgumentException("Document URLs must share the same items/{itemId}/ prefix.");
-            }
-        }
-        return resolvedId;
     }
 
     private void ensureDocUrlsMatchItem(List<String> docUrls, String itemId) {
         String bucket = firebaseProperties.getStorageBucket();
         requireStorageBucketConfigured(bucket);
         for (String docUrl : docUrls) {
-            String parsedId = parseItemIdAndValidate(docUrl, bucket);
-            if (!itemId.equals(parsedId)) {
-                throw new IllegalArgumentException("Document URLs must live under items/" + itemId + "/");
-            }
+            parseItemIdAndValidate(docUrl, bucket);
         }
     }
 
@@ -775,13 +882,8 @@ public class ItemService {
                 createdAt,
                 List.of("sample"),
                 List.of("https://example.com/image.jpg"),
+                "user-123",
                 "user-123");
     }
 }
-
-
-
-
-
-
 

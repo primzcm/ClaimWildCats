@@ -3,18 +3,25 @@ package com.claimwildcats.api.controller;
 import com.claimwildcats.api.domain.ClaimSummary;
 import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.domain.UserProfile;
+import com.claimwildcats.api.dto.UpdateUserProfileRequest;
+import com.claimwildcats.api.security.SecurityUtils;
 import com.claimwildcats.api.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Users")
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -27,6 +34,16 @@ public class UserController {
     @Operation(summary = "User profile", description = "Fetch profile information for a campus community member.")
     public UserProfile profile(@PathVariable String userId) {
         return userService.getProfile(userId);
+    }
+
+    @PutMapping("/me/profile")
+    @Operation(
+            summary = "Update current user profile",
+            description = "Update profile fields for the authenticated user (currently username only).")
+    public UserProfile updateProfile(@RequestBody @Validated UpdateUserProfileRequest request) {
+        String userId = SecurityUtils.currentUserId()
+                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+        return userService.updateProfile(userId, request.username());
     }
 
     @GetMapping("/{userId}/reports")

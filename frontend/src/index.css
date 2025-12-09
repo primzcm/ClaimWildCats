@@ -1,23 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #3e0703;
-  background-color: #fff0c4;
+  color: #2d1a12;
+  background-color: #FFF0C4;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light;
 
-  --color-burgundy-dark: #3e0703;
-  --color-burgundy: #660b05;
-  --color-red: #cf1205;
-  --color-gold: #ffcb33;
+  --color-burgundy-dark: #3d0000;
+  --color-burgundy: #5b0000;
+  --color-red: #c73a27;
+  --color-gold: #f2c046;
   --color-cream: #fff0c4;
-  --surface-color: #fffaf0;
-  --muted-color: rgba(62, 7, 3, 0.72);
-  --border-color: rgba(62, 7, 3, 0.14);
-  --panel-shadow: 0 32px 55px -34px rgba(102, 11, 5, 0.45);
+  --surface-color: #fff0c4;
+  --muted-color: rgba(45, 26, 18, 0.78);
+  --border-color: rgba(91, 0, 0, 0.12);
+  --panel-shadow: 0 28px 60px -38px rgba(91, 0, 0, 0.35);
 }
 
 a {
@@ -32,21 +36,17 @@ a:hover {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(207, 18, 5, 0.18), transparent 42%),
-    radial-gradient(circle at 80% 15%, rgba(255, 203, 51, 0.25), transparent 55%),
-    var(--color-cream);
+  background: var(--color-cream);
   color: var(--color-burgundy-dark);
   overflow-x: hidden;
 }
 
-/* Prevent overflow from padding + width */
 * {
   box-sizing: border-box;
 }
 
-/* Force media to stay inside layout */
-img, video {
+img,
+video {
   max-width: 100%;
   height: auto;
 }
@@ -56,11 +56,11 @@ img, video {
 }
 
 h1,
- h2,
- h3,
- h4,
- h5,
- h6 {
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   margin: 0;
   color: var(--color-burgundy-dark);
