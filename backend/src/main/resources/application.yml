@@ -7,6 +7,8 @@ spring:
 
 server:
   port: 8080
+  error:
+    include-message: always
 
 firebase:
   enabled: ${FIREBASE_ENABLED:true}
