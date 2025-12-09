@@ -59,7 +59,6 @@
   max-width: 500px;
 }
 
-/* Title */
 .reg-title {
   font-size: 3rem;
   color: #5e0b0b;
@@ -77,7 +76,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Form elements */
 .login-form {
   display: grid;
   gap: 1.2rem;
@@ -128,7 +126,6 @@
   cursor: not-allowed;
 }
 
-/* Error message */
 .login-error {
   color: #b91c1c;
   font-weight: 600;
@@ -137,7 +134,6 @@
   border-radius: 8px;
 }
 
-/* Bottom link */
 .login-footer {
   margin-top: 0.3rem;
   font-size: 0.95rem;

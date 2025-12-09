@@ -114,14 +114,14 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  border-top: 1px solid rgba(255, 240, 196, 0.18); /* Subtle visual separation from content above */
-  box-shadow: 0 -10px 28px -18px rgba(0, 0, 0, 0.35); /* Soft shadow above footer for hierarchy */
+  border-top: 1px solid rgba(255, 240, 196, 0.18); 
+  box-shadow: 0 -10px 28px -18px rgba(0, 0, 0, 0.35);
 }
 
 .app-footer__inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.1rem 1.5rem 1.85rem; /* Slightly increased top padding for breathing room */
+  padding: 2.1rem 1.5rem 1.85rem; 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
