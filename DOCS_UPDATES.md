@@ -78,6 +78,12 @@ Record of notable changes to code and docs. Add entries with date, scope, and br
 
 - Backend: Introduced `ClaimDetail` + `ClaimDecisionRequest`, tightened `ClaimController` access rules, enforced attachment path validation, duplicate-claim checks, and reviewer decisions that auto-mark approved items as `CLAIMED`.
 - Frontend: Added a full Claim Item form with Firebase Storage uploads, duplicate-claim detection, and contextual messaging; `MyReportsPage` now lists found reports and lets reporters approve/deny claims with reviewer notes.
+
+## 2025-12-09 - Friendlier API error messages
+
+- Backend: Added `GlobalExceptionHandler` to map `IllegalArgumentException`/`IllegalStateException` into ProblemDetails 4xx responses with clear `detail` messages instead of generic 500s.
+- Backend: Enabled `server.error.include-message=always` so Spring Boot problem responses include exception details during development.
+- Frontend: Updated `src/api/client.js` to surface backend error `detail`/`message`/`error` fields (or response text) instead of only showing `500 Internal Server Error`, so cases like duplicate claims display a clear explanation to users.
 - Docs: Documented the claim process in `README.md` and logged these changes here.
 
 ## 2025-12-06 - Sequential Firestore IDs
