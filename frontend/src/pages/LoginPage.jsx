@@ -8,7 +8,7 @@ import './LoginPage.css';
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from ?? '/me';
+  const redirectTo = location.state?.from ?? '/home';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

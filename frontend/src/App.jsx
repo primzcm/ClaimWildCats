@@ -103,17 +103,12 @@ export default function App() {
             <Link to="/faq" className="hover:text-gold">
               Help / FAQ
             </Link>
-            <Link to="/admin" className="hover:text-gold">
-              Admin Console
-            </Link>
-            <Link to="/settings" className="hover:text-gold">
-              Privacy
-            </Link>
           </div>
           <p className="text-white/80">(c) {new Date().getFullYear()} ClaimWildCats Lost &amp; Found</p>
-          <small className="text-white/60">123 Campus Drive • (000) 000-0000</small>
+          <small className="text-white/60">7VVJ+QFR, Natalio B. Bacalso Ave, Cebu City, 6000 Cebu</small>
         </div>
       </footer>
     </div>
   );
 }
+

@@ -16,7 +16,7 @@ firebase:
   storage-bucket: ${FIREBASE_STORAGE_BUCKET:claimwildcats-dev.firebasestorage.app}
   credentials:
 
-    location: ${FIREBASE_CREDENTIALS_PATH:file:/C:\Users\Angel\Downloads\claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f 1.json}
+    location: ${FIREBASE_CREDENTIALS_PATH:file:F:\myFiles\FirebaseKeys\claimwildcats-dev-firebase-adminsdk-fbsvc-9ce1b7575f.json}
     type: service-account
 
 management:

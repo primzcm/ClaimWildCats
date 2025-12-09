@@ -8,7 +8,7 @@
 }
 
 .page-layout__header {
-  background: var(--color-burgundy-dark);
+  background: var(--surface-color);
   display: flex;
   flex-wrap: wrap;
   gap: 1rem 2rem;
