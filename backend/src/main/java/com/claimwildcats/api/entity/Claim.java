@@ -26,7 +26,7 @@ public class Claim {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    // we store the ids as strings to match sa item/user pattern. 
+    // we store the ids as strings to match sa item/user pattern.
 
     @Column(nullable=false)
     private String itemId;
@@ -103,5 +103,5 @@ public class Claim {
 
     public List<String> getAttachmentUrls() { return attachmentUrls; }
     public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }
-}
+
 }
