@@ -53,7 +53,7 @@ public class Item {
     private List<String> tags = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "items_tags", joinColumns = @JoinColumn(name = "item_id"))
+    @CollectionTable(name = "items_docs", joinColumns = @JoinColumn(name = "item_id"))
     @Column(name = "url")
     private List<String> docUrls = new ArrayList<>();
 
