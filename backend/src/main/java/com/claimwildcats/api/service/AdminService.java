@@ -1,70 +1,92 @@
 package com.claimwildcats.api.service;
 
-import com.claimwildcats.api.domain.AdminDashboardSnapshot;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+// import com.claimwildcats.api.domain.AdminDashboardSnapshot;
 import com.claimwildcats.api.domain.ClaimStatus;
 import com.claimwildcats.api.domain.ClaimSummary;
 import com.claimwildcats.api.domain.ItemSummary;
 import com.claimwildcats.api.domain.UserProfile;
-import com.claimwildcats.api.domain.UserRole;
-import java.time.Instant;
-import java.util.List;
-import org.springframework.stereotype.Service;
+import com.claimwildcats.api.entity.Claim;
+import com.claimwildcats.api.entity.User;
+import com.claimwildcats.api.repository.ClaimRepository;
+import com.claimwildcats.api.repository.ItemRepository;
+import com.claimwildcats.api.repository.UserRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class AdminService {
 
     private final ItemService itemService;
-    private final ClaimService claimService;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
+    private final ClaimRepository claimRepository;
 
-    public AdminService(ItemService itemService, ClaimService claimService) {
+    public AdminService(ItemService itemService, 
+                        UserRepository userRepository, 
+                        ItemRepository itemRepository, 
+                        ClaimRepository claimRepository) {
         this.itemService = itemService;
-        this.claimService = claimService;
+        this.userRepository = userRepository;
+        this.itemRepository = itemRepository;
+        this.claimRepository = claimRepository;
     }
 
-    public AdminDashboardSnapshot dashboard() {
+    /*public AdminDashboardSnapshot dashboard() {
+        long userCount = userRepository.count();
+        long itemCount = itemRepository.count();
+
         return new AdminDashboardSnapshot(
-                0.68,
-                36.4,
-                24,
-                102,
-                List.of("Library Atrium", "Engineering West", "Student Center"));
+                0.0,
+                0.0,
+                userCount,
+                itemCount,
+                List.of("Library", "Student Center", "Cafeteria"));
     }
+    */
 
     public List<UserProfile> listUsers() {
-        return List.of(
-                new UserProfile(
-                        "user-123",
-                        "Jordan Wildcat",
-                        "jordan.wildcat@campus.edu",
-                        UserRole.USER,
-                        true,
-                        2,
-                        5,
-                        Instant.now().minusSeconds(120_000)),
-                new UserProfile(
-                        "admin-001",
-                        "Casey Admin",
-                        "casey.admin@campus.edu",
-                        UserRole.ADMIN,
-                        true,
-                        0,
-                        12,
-                        Instant.now().minusSeconds(320_000)));
+        return userRepository.findAll().stream()
+                .map(this::mapToUserProfile)
+                .collect(Collectors.toList());
     }
 
     public List<ItemSummary> flaggedReports() {
-        return itemService.browseItems();
+        return itemService.browseItems(); 
     }
 
     public List<ClaimSummary> pendingClaims() {
-        return List.of(
-                new ClaimSummary(
-                        "claim-002",
-                        "lost-001",
-                        "user-456",
-                        ClaimStatus.PENDING,
-                        Instant.now().minusSeconds(2400),
-                        null,
-                        null));
+        return claimRepository.findByStatus(ClaimStatus.PENDING).stream()
+        .map(claim -> mapToClaimSummary(claim))
+                .collect(Collectors.toList());
+    }
+
+    private UserProfile mapToUserProfile(User user) {
+        return new UserProfile(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole(),
+                user.isEmailVerified(),
+                0,
+                0,
+                user.getCreatedAt()
+        );
+    }
+
+    private ClaimSummary mapToClaimSummary(Claim claim) {
+        return new ClaimSummary(
+                claim.getId(),
+                claim.getItemId(),
+                claim.getClaimantId(),
+                claim.getStatus(),
+                claim.getSubmittedAt(),
+                claim.getReviewedAt(),
+                claim.getReviewerId()
+        );
     }
 }

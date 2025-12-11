@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.claimwildcats.api.domain.ClaimDetail;
 import com.claimwildcats.api.domain.ClaimStatus;
@@ -18,6 +19,7 @@ import com.claimwildcats.api.entity.Claim;
 import com.claimwildcats.api.repository.ClaimRepository;
 
 @Service
+@Transactional
 public class ClaimService {
 
     private static final Logger log = LoggerFactory.getLogger(ClaimService.class);
@@ -25,7 +27,7 @@ public class ClaimService {
 
     private final ClaimRepository claimRepository;
 
-    public ClaimService(ClaimRepository claimRepository){
+    public ClaimService(ClaimRepository claimRepository) {
         this.claimRepository = claimRepository;
     }
 
@@ -50,47 +52,53 @@ public class ClaimService {
     }
 
     public ClaimSummary submitClaim(String itemId, ClaimItemRequest request, String claimantId) {
-        // validation
+        // Business Rule: Student can only have 1 pending claim per item
         if (claimRepository.existsByItemIdAndClaimantIdAndStatus(itemId, claimantId, ClaimStatus.PENDING)) {
             throw new IllegalStateException("You already have a pending claim for this item.");
         }
 
-        List<String> attachments = sanitizeAttachmentUrls(request.attachmentUrls(), itemId);
+        List<String> attachments = sanitizeAttachmentUrls(request.attachmentUrls());
         String secretDetail = normalized(request.secretDetail());
         String justification = normalized(request.justification());
 
         Claim newClaim = new Claim(itemId, claimantId, secretDetail, justification, attachments);
         Claim savedClaim = claimRepository.save(newClaim);
-        
+
+        log.info("Claim created: ID={} by User={}", savedClaim.getId(), claimantId);
         return mapToSummary(savedClaim);
     }
-   
+
     public ClaimSummary reviewClaim(ClaimDetail claimDetail, ClaimDecisionRequest request, String reviewerId) {
         ClaimStatus desiredStatus = request.status();
         
         if (desiredStatus == null || desiredStatus == ClaimStatus.PENDING) {
-            throw new IllegalArgumentException("Provide a valid decision status.");
+            throw new IllegalArgumentException("Provide a valid decision status (APPROVED/DENIED).");
         }
-        
+
+        // Fetch fresh entity from DB to ensure concurrency safety
         Claim claimEntity = claimRepository.findById(claimDetail.id())
                 .orElseThrow(() -> new IllegalArgumentException("Claim not found"));
 
         if (claimEntity.getStatus() != ClaimStatus.PENDING) {
             throw new IllegalStateException("Claim " + claimEntity.getId() + " has already been decided.");
         }
+
         claimEntity.setStatus(desiredStatus);
         claimEntity.setReviewerId(reviewerId);
         claimEntity.setReviewedAt(Instant.now());
+        
         String note = normalized(request.reviewerNote());
         if (note != null) {
             claimEntity.setReviewerNote(note);
         }
 
-        // save naten
         Claim updatedClaim = claimRepository.save(claimEntity);
-
+        log.info("Claim reviewed: ID={} Status={} by Reviewer={}", updatedClaim.getId(), desiredStatus, reviewerId);
+        
         return mapToSummary(updatedClaim);
     }
+
+    // --- Mappers ---
 
     private ClaimDetail mapToDetail(Claim entity) {
         return new ClaimDetail(
@@ -120,36 +128,33 @@ public class ClaimService {
         );
     }
 
+    // --- Utilities ---
+
     private String normalized(String value) {
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private List<String> sanitizeAttachmentUrls(List<String> attachmentUrls, String itemId) {
+    private List<String> sanitizeAttachmentUrls(List<String> attachmentUrls) {
         if (attachmentUrls == null || attachmentUrls.isEmpty()) {
             return new ArrayList<>();
         }
         if (attachmentUrls.size() > MAX_ATTACHMENTS) {
             throw new IllegalArgumentException("You can attach up to " + MAX_ATTACHMENTS + " files.");
         }
-        List<String> sanitized = new ArrayList<>(attachmentUrls.size());
         
-        String requiredPrefix = "claims/" + itemId + "/";
-        
+        List<String> sanitized = new ArrayList<>();
         for (String raw : attachmentUrls) {
             if (raw == null) continue;
             String trimmed = raw.trim();
             if (trimmed.isEmpty()) continue;
-
-            if (!trimmed.startsWith("gs://")) {
-            }
             
+            // Since we removed Firebase, we just ensure it looks somewhat like a URL or Path
+            // Depending on how your frontend sends files now (AWS S3, Local, etc), adjust this.
+            // For now, we allow any non-empty string.
             sanitized.add(trimmed);
         }
         return sanitized;
     }
 }
-
