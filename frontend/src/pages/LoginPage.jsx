@@ -1,16 +1,16 @@
 import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Import the new AuthContext
+import { useAuth } from '../context/AuthContext';
+import CatLogo from '../icons/CatLogo.png';
 import './LoginPage.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth(); // Get the login function from context
+  const { login } = useAuth(); 
   
-  // Default to '/me' (Dashboard) if no previous page was requested
   const redirectTo = location.state?.from ?? '/me'; 
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -44,9 +44,9 @@ export function LoginPage() {
       if (!response.ok) {
         throw new Error(data.message || 'Invalid email or password.');
       }
-      console.log("Login Successful:", data);
-            login(data);
 
+      console.log("Login Successful:", data);
+      login(data); 
       resetForm();
       
       navigate(redirectTo, { replace: true });
@@ -60,42 +60,50 @@ export function LoginPage() {
   };
 
   return (
-    <section className="auth-shell">
-      <div className="auth-card">
-        <h1>Log in</h1>
-        <p className="auth-subtitle">Access saved reports, manage claims, and receive alerts.</p>
+    <section className="login-shell">
 
-        <form className="auth-form" onSubmit={handleEmailSignIn} ref={formRef}>
-          <label className="auth-label">
-            Email
+      {/* si cat */}
+      <div className="login-cat">
+        <img src={CatLogo} alt="Cat Logo" />
+      </div>
+
+      {/* form sa right side */}
+      <div className="login-card">
+        <h1 className="login-title">LOG IN</h1>
+
+        <form className="login-form" onSubmit={handleEmailSignIn} ref={formRef}>
+          <label className="login-label">
+            Email / Username
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
               placeholder="wildcat@campus.edu"
               required
             />
           </label>
-          <label className="auth-label">
+
+          <label className="login-label">
             Password
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
             />
           </label>
-          <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        {error && <p className="auth-error">{error}</p>}
+        {error && <p className="login-error">{error}</p>}
 
-        <p className="auth-footer">
-          Need an account? <Link to="/auth/register">Register instead</Link>
+        <p className="login-footer">
+          Still don’t have an account? <Link to="/auth/register">Register here</Link>
         </p>
       </div>
     </section>

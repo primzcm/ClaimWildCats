@@ -1,125 +1,146 @@
-.auth-shell {
+/* Make this element full-bleed even if a parent is centered */
+.login-shell {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 60vh;
+  flex-direction: row;
+
+  /* full viewport width, and "pull" to the left so it truly spans the viewport */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+
+  /* make the yellow panel span vertically between header + footer */
+  min-height: calc(100vh - 140px); /* adjust 140px if your header+footer total height is different */
+  box-sizing: border-box;
+  background: #fff0c4; /* panel will provide the yellow background */
+  padding: 0; /* panel handles internal padding */
 }
 
-.auth-card {
-  width: min(420px, 90vw);
-  background: var(--surface-color);
-  border-radius: 20px;
-  padding: 2.75rem 2.5rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--panel-shadow);
+/* the wide yellow panel that touches header/footer */
+.login-panel {
+  width: 100%;
+  /* constrain the content width so cat+form don't stretch edge-to-edge */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3.5rem 0; /* vertical spacing inside the yellow area */
+  background: #FFF0C4; /* full yellow band */
+  box-sizing: border-box;
+}
+
+/* center a fixed-width inner container inside the yellow panel */
+.login-inner {
+  width: min(1100px, 95%); /* controls how wide the yellow canvas with cat+form is */
+  display: flex;
+  gap: 4rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 2.5rem;
+  box-sizing: border-box;
+  background: transparent; /* keep the inner area transparent (yellow comes from .login-panel) */
+}
+
+/* LEFT SIDE CAT IMAGE */
+.login-cat img {
+  width: 500px;
+  max-width: 100%;
+  height: auto;
+  margin-right: 130px;
+  margin-bottom: 150px;
+  object-fit: contain;
+}
+
+/* RIGHT SIDE FORM */
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.0rem;
+  max-width: 500px;
+}
+
+.reg-title {
+  font-size: 3rem;
+  color: #5e0b0b;
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 3rem;
+  color: #5e0b0b;
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.login-form {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.2rem;
 }
 
-.auth-subtitle {
-  font-size: 0.95rem;
-}
-
-.auth-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.auth-label {
+.login-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #5e0b0b;
   display: grid;
   gap: 0.4rem;
-  font-weight: 600;
-  color: var(--color-burgundy-dark);
 }
 
-.auth-label input {
-  border-radius: 10px;
-  border: 1px solid rgba(62, 7, 3, 0.2);
-  padding: 0.6rem 0.8rem;
+.login-label input {
+  border-radius: 8px;
+  border: 2px solid #5e0b0b;
+  background: #5e0b0b;
+  padding: 0.7rem 1rem;
   font-size: 1rem;
-  background: #fffefe;
+  color: #fff5e1;
 }
 
-.auth-submit,
-.auth-google {
+.login-label input::placeholder {
+  color: #ffeccc64;
+  font-style: italic;
+}
+
+/* Sign-in button */
+.login-btn {
+  background: #5e0b0b;
+  color: #fff0c4;
   border: none;
-  border-radius: 999px;
-  padding: 0.75rem 1.4rem;
+  border-radius: 8px;
+  padding: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: 0.2s ease;
 }
 
-.auth-submit {
-  background: var(--color-red);
-  color: var(--color-cream);
-}
-
-.auth-google {
-  background: #ffffff;
-  border: 1px solid rgba(62, 7, 3, 0.2);
-  color: var(--color-burgundy-dark);
-}
-
-.auth-submit:hover,
-.auth-google:hover {
+.login-btn:hover:not([disabled]) {
+  background: #7a0e0e;
   transform: translateY(-2px);
-  box-shadow: 0 16px 32px -28px rgba(62, 7, 3, 0.45);
 }
 
-.auth-submit[disabled],
-.auth-google[disabled] {
+.login-btn[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: rgba(62, 7, 3, 0.5);
-  font-size: 0.85rem;
-}
-
-.auth-divider span {
-  flex: 1;
-  height: 1px;
-  background: rgba(62, 7, 3, 0.2);
-}
-
-.auth-error {
+.login-error {
   color: #b91c1c;
-  background: #fee2e2;
-  border-radius: 10px;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.9rem;
-}
-
-.auth-footer {
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.auth-footer a {
   font-weight: 600;
-  color: var(--color-red);
+  background: #fee2e2;
+  padding: 0.75rem;
+  border-radius: 8px;
 }
 
-.auth-label__hint {
-  font-size: 0.75rem;
-  font-weight: 500;
-  opacity: 0.7;
+.login-footer {
+  margin-top: 0.3rem;
+  font-size: 0.95rem;
+  color: #5e0b0b;
 }
 
-.auth-success {
-  color: #166534;
-  background: #dcfce7;
-  border-radius: 10px;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.9rem;
+.login-footer a {
+  color: #c40000;
+  font-weight: bold;
 }
-
