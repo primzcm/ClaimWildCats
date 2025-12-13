@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import com.claimwildcats.api.domain.UserRole;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -19,6 +20,8 @@ public class User {
     private String fullName;
     private String email;
     private boolean emailVerified;
+    @Column(nullable = false)
+    private String password;
 
 
     @Enumerated(EnumType.STRING)
@@ -58,7 +61,8 @@ public class User {
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     
-    
+    public String getPassword(){return password;}
+    public void setPassword(String password){this.password = password;}
 }
 
 

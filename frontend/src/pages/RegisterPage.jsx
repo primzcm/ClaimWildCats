@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
-import { auth } from '../lib/firebase';
 import './LoginPage.css';
 
 export function RegisterPage() {
@@ -18,6 +16,7 @@ export function RegisterPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (loading) return;
+    
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -28,26 +27,37 @@ export function RegisterPage() {
     setSuccess('');
 
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
-      if (displayName) {
-        await updateProfile(credential.user, { displayName });
-      }
-      try {
-        await sendEmailVerification(credential.user);
-      } catch (verificationError) {
-        console.warn('Could not send verification email', verificationError);
+      const response = await fetch('http://localhost:8080/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          full_name: displayName,
+          email: email,
+          password: password,
+          role: roleCode || 'user'
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Registration failed');
       }
 
-      // TODO: persist roleCode in Firestore once roles are implemented.
-      setSuccess('Account created! Check your email for a verification link, then log in.');
+      setSuccess('Account created successfully! Redirecting...');
+      
       setDisplayName('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
       setRoleCode('');
+
       setTimeout(() => navigate('/auth/login'), 1500);
+
     } catch (err) {
-      setError(err?.message ?? 'Unable to create account.');
+      console.error(err);
+      setError(err.message || 'Unable to create account. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -112,7 +122,7 @@ export function RegisterPage() {
             />
           </label>
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Creating account…' : 'Create account'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 

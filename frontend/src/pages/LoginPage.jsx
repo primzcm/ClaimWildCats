@@ -1,13 +1,16 @@
 import { useRef, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Import the new AuthContext
 import './LoginPage.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from ?? '/me';
+  const { login } = useAuth(); // Get the login function from context
+  
+  // Default to '/me' (Dashboard) if no previous page was requested
+  const redirectTo = location.state?.from ?? '/me'; 
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,49 +23,37 @@ export function LoginPage() {
     setPassword('');
   };
 
-  const surfaceError = (err) => {
-    if (!err) return 'Something went wrong. Please try again.';
-    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-      return 'Check your email and password and try again.';
-    }
-    if (err.code === 'auth/invalid-email') {
-      return 'Enter a valid email address.';
-    }
-    if (err.code === 'auth/network-request-failed') {
-      return 'Network error. Check your connection and retry.';
-    }
-    return err.message ?? 'Unable to sign in right now.';
-  };
-
   const handleEmailSignIn = async (event) => {
     event.preventDefault();
     if (loading) return;
+    
     setLoading(true);
     setError('');
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      resetForm();
-      navigate(redirectTo, { replace: true });
-    } catch (err) {
-      setError(surfaceError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleGoogleSignIn = async () => {
-    if (loading) return;
-    setLoading(true);
-    setError('');
     try {
-      if (!googleProvider) {
-        throw new Error('Google sign-in is not configured.');
+      const response = await fetch('http://localhost:8080/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid email or password.');
       }
-      await signInWithPopup(auth, googleProvider);
+      console.log("Login Successful:", data);
+            login(data);
+
       resetForm();
+      
       navigate(redirectTo, { replace: true });
+
     } catch (err) {
-      setError(surfaceError(err));
+      console.error(err);
+      setError('Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -82,6 +73,7 @@ export function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
+              placeholder="wildcat@campus.edu"
               required
             />
           </label>
@@ -96,19 +88,9 @@ export function LoginPage() {
             />
           </label>
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-
-        <div className="auth-divider">
-          <span />
-          <p>or</p>
-          <span />
-        </div>
-
-        <button type="button" className="auth-google" onClick={handleGoogleSignIn} disabled={loading}>
-          Continue with Google
-        </button>
 
         {error && <p className="auth-error">{error}</p>}
 

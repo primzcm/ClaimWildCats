@@ -1,6 +1,5 @@
-import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { auth } from './lib/firebase';
 import './App.css';
 
 const primaryNav = [
@@ -11,20 +10,15 @@ const primaryNav = [
 ];
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // const handleSignOut = async () => {
-  //   await auth.signOut();
-  // };
-
-  const handleSignOut = async () => {
-    await auth.signOut();
-    navigate('/', { replace: true });  // ← redirect to landing
+  const handleSignOut = () => {
+    logout(); 
+    navigate('/', { replace: true });
   };
 
-  // Otherwise → render the normal app layout
   return (
     <div className="app">
       <header className="app-header">
@@ -52,10 +46,7 @@ export default function App() {
             {!loading && user ? (
               <>
                 <span className="app-user-pill">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt={user.displayName ?? user.email ?? 'User'} />
-                  ) : null}
-                  <span>{user.displayName ?? user.email}</span>
+                  <span>{user.fullName || user.full_name || user.email}</span>
                 </span>
                 <button type="button" className="btn btn--ghost" onClick={handleSignOut}>
                   Log out

@@ -8,7 +8,7 @@ spring:
   # --- NEW MYSQL CONFIGURATION START ---
   datasource:
     # Make sure you created this database in Workbench first!
-    url: jdbc:mysql://localhost:3306/claimwildcats_db
+    url: jdbc:mysql://localhost:3306/claimwildcats_db?
     username: root
     # Put the password you created in Workbench here
     password: f1Xy0u11ajax-

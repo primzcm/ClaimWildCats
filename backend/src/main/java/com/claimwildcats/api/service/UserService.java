@@ -92,6 +92,41 @@ public class UserService {
             );
         }
 
+        public void registerNewUser(String fullName, String email, String password, String roleInput) {
+            String newUserId = java.util.UUID.randomUUID().toString();
+    
+            User newUser = new User(newUserId, email);
+            newUser.setFullName(fullName);
+            newUser.setPassword(password);  
+            try {
+                if (roleInput != null && !roleInput.isEmpty()) {
+                    newUser.setRole(UserRole.valueOf(roleInput.toUpperCase())); 
+                } else {
+                    newUser.setRole(UserRole.USER);
+                }
+            } catch (Exception e) {
+                newUser.setRole(UserRole.USER);
+            }
+                userRepository.save(newUser);
+        }
+
+        public User login(String email, String password) {
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            
+            if (userOpt.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+    
+            User user = userOpt.get();
+    
+            
+            if (!user.getPassword().equals(password)) {
+                throw new RuntimeException("Invalid password");
+            }
+    
+            return user;
+        }
+
         
     }
 
