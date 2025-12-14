@@ -1,42 +1,71 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import CatLogo from '../icons/CatLogo.png';
 import './LoginPage.css';
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState('');
+  
+  // State variables from New UI
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [roleCode, setRoleCode] = useState('');
-  const [error, setError] = useState('');
+  
+  // Error handling
+  const [errors, setErrors] = useState([]); 
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+
+  const validateUsername = (name) => /^[a-zA-Z0-9 ]+$/.test(name);
+  const validatePassword = (pass) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])([^\s]{8,})$/.test(pass);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (loading) return;
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+
+    const newErrors = [];
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername)
+      newErrors.push("Choose a username to continue.");
+    else if (!validateUsername(trimmedUsername))
+      newErrors.push("Username can only contain letters, numbers, and spaces.");
+
+    if (!email.toLowerCase().endsWith("@cit.edu"))
+      newErrors.push("Enter a valid institutional email (@cit.edu).");
+
+    if (!validatePassword(password))
+      newErrors.push(
+        "Password must be 8+ chars, with uppercase, lowercase, number, and special char."
+      );
+
+    if (password !== confirmPassword)
+      newErrors.push("Passwords do not match.");
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setLoading(true);
-    setError('');
+    setErrors([]);
     setSuccess('');
 
     try {
+      // 2. LOGIC: Send to Java Backend (Port 8080)
       const response = await fetch('http://localhost:8080/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          full_name: displayName,
+          full_name: trimmedUsername, // Map 'username' to 'full_name' for Java
           email: email,
           password: password,
-          role: roleCode || 'user'
+          role: 'user' // Default role since we removed the input field from UI
         }),
       });
 
@@ -45,92 +74,101 @@ export function RegisterPage() {
         throw new Error(data.message || 'Registration failed');
       }
 
-      setSuccess('Account created successfully! Redirecting...');
-      
-      setDisplayName('');
+      // 3. Success
+      setSuccess("Account created! You may now log in.");
+
+      // Clear form
+      setUsername('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      setRoleCode('');
 
-      setTimeout(() => navigate('/auth/login'), 1500);
+      setTimeout(() => navigate("/auth/login"), 1500);
 
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Unable to create account. Please try again later.');
+      setErrors([err.message || "Unable to create account. Is the server running?"]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="auth-shell">
-      <div className="auth-card">
-        <h1>Register</h1>
-        <p className="auth-subtitle">Create an account to manage reports, claims, and notifications.</p>
+    <section className="login-shell">
+      
+      {/* LEFT CAT IMAGE */}
+      <div className="login-cat">
+        <img src={CatLogo} alt="Cat Logo" />
+      </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-label">
-            Full name
+      {/* RIGHT FORM CARD */}
+      <div className="login-card">
+        <h1 className="reg-title">CREATE ACCOUNT</h1>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          
+          <label className="login-label">
+            Username
             <input
               type="text"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              autoComplete="name"
-              placeholder="Jordan Wildcat"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your username"
               required
             />
           </label>
-          <label className="auth-label">
-            Email
+
+          <label className="login-label">
+            Institutional Email
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              placeholder="wildcat@campus.edu"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ex: juandelacruz@cit.edu"
               required
             />
           </label>
-          <label className="auth-label">
+
+          <label className="login-label">
             Password
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="new-password"
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </label>
-          <label className="auth-label">
-            Confirm password
+
+          <label className="login-label">
+            Confirm Password
             <input
               type="password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              autoComplete="new-password"
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </label>
-          <label className="auth-label">
-            Role code <span className="auth-label__hint">(optional)</span>
-            <input
-              type="text"
-              value={roleCode}
-              onChange={(event) => setRoleCode(event.target.value.trim())}
-              placeholder="e.g. ADMIN-2025"
-            />
-          </label>
-          <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Creating account...' : 'Create account'}
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? "Creating…" : "Create Account"}
           </button>
         </form>
 
-        {error && <p className="auth-error">{error}</p>}
-        {success && <p className="auth-success">{success}</p>}
+        {/* ERROR LIST DISPLAY */}
+        {errors.length > 0 && (
+          <div className="login-error">
+            <ul>
+              {errors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        <p className="auth-footer">
-          Have an account? <Link to="/auth/login">Log in</Link>
+        {success && <p className="login-success">{success}</p>}
+
+        <p className="login-footer">
+          Already have an account? <Link to="/auth/login">Log in</Link>
         </p>
       </div>
     </section>

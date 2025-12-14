@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping; 
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -70,4 +70,12 @@ public class UserController {
     public User login(@RequestBody LoginRequest request) {
         return userService.login(request.getEmail(), request.getPassword());
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{userId}")
+    @Operation(summary = "Update Profile", description = "Update user name or details")
+    public void updateProfile(@PathVariable String userId, @RequestBody RegisterRequest request) {
+        userService.updateUser(userId, request.getFull_name(), request.getEmail());
+    }
+
+    
 }

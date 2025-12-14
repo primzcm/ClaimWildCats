@@ -149,10 +149,6 @@ public class ClaimService {
             if (raw == null) continue;
             String trimmed = raw.trim();
             if (trimmed.isEmpty()) continue;
-            
-            // Since we removed Firebase, we just ensure it looks somewhat like a URL or Path
-            // Depending on how your frontend sends files now (AWS S3, Local, etc), adjust this.
-            // For now, we allow any non-empty string.
             sanitized.add(trimmed);
         }
         return sanitized;

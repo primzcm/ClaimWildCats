@@ -1,31 +1,31 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
-import { HomePage } from './pages/HomePage';
-import { SearchPage } from './pages/SearchPage';
-import { ReportLostPage } from './pages/ReportLostPage';
-import { ReportFoundPage } from './pages/ReportFoundPage';
-import { LostPage } from './pages/LostPage';
-import { FoundPage } from './pages/FoundPage';
-import { ItemDetailsPage } from './pages/ItemDetailsPage';
-import { EditItemPage } from './pages/EditItemPage';
-import { ClaimItemPage } from './pages/ClaimItemPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { MyReportsPage } from './pages/MyReportsPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { AdminUsersPage } from './pages/AdminUsersPage';
-import { AdminReportsPage } from './pages/AdminReportsPage';
-import { AdminModerationPage } from './pages/AdminModerationPage';
-import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { GetStartedPage } from './pages/GetStartedPage';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
-import LandingPage from './pages/LandingPage';
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { AdminModerationPage } from './pages/AdminModerationPage';
+import { AdminReportsPage } from './pages/AdminReportsPage';
+import { AdminUsersPage } from './pages/AdminUsersPage';
+import { ClaimItemPage } from './pages/ClaimItemPage';
+import { EditItemPage } from './pages/EditItemPage';
 import FAQPage from './pages/FAQPage';
+import { FoundPage } from './pages/FoundPage';
+import { GetStartedPage } from './pages/GetStartedPage';
+import { HomePage } from './pages/HomePage';
+import { ItemDetailsPage } from './pages/ItemDetailsPage';
+import LandingPage from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { LostPage } from './pages/LostPage';
+import { MyReportsPage } from './pages/MyReportsPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { ReportFoundPage } from './pages/ReportFoundPage';
+import { ReportLostPage } from './pages/ReportLostPage';
+import { SearchPage } from './pages/SearchPage';
+import { SettingsPage } from './pages/SettingsPage';
 
-
+// ✅ IMPORT THE PROFILE PAGE
+import { ProfilePage } from './pages/ProfilePage';
 
 export const router = createBrowserRouter([
 
@@ -48,7 +48,9 @@ export const router = createBrowserRouter([
       { path: 'items/:id', element: <ItemDetailsPage /> },
       { path: 'items/:id/edit', element: <ProtectedRoute><EditItemPage /></ProtectedRoute> },
       { path: 'items/:id/claim', element: <ProtectedRoute><ClaimItemPage /></ProtectedRoute> },
+      
       { path: 'me', element: <ProtectedRoute><ProfilePage /></ProtectedRoute> },
+      
       { path: 'me/reports', element: <ProtectedRoute><MyReportsPage /></ProtectedRoute> },
       { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },
       { path: 'auth/login', element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },

@@ -197,6 +197,49 @@
     left: 130px;
   }
 }
+
+/* Compact, themed CTA buttons in the hero
+   - Use palette reds/golds with accessible text contrast
+   - Keep shape/padding controlled via utility classes in JSX */
+.home-hero-btn {
+  background-color: var(--color-burgundy);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+}
+
+.home-hero-btn--lost {
+  background-color: var(--color-red); /* #c73a27 for "Report Lost" */
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.home-hero-btn--lost:hover {
+  background-color: #aa2f20; /* Slightly darker on hover */
+}
+
+.home-hero-btn--found {
+  background-color: var(--color-gold); /* #f2c046 for "Report Found" */
+  color: #3d0000; /* Dark burgundy text for contrast */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.home-hero-btn--found:hover {
+  background-color: #d5a73a; /* Slightly darker gold on hover */
+}
+
+/* Subtle card treatment over dark burgundy background
+   - Light border + soft shadow so cards feel grounded
+   - Hover state slightly lifts and deepens the shadow */
+.home-activity-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.home-activity-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
 .home-feed {
   display: grid;
   gap: 1.5rem;

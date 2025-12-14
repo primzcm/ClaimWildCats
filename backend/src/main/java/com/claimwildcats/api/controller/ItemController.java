@@ -1,22 +1,9 @@
 package com.claimwildcats.api.controller;
 
-import com.claimwildcats.api.domain.CampusZone;
-import com.claimwildcats.api.domain.ItemDetail;
-import com.claimwildcats.api.domain.ItemStatus;
-import com.claimwildcats.api.domain.ItemSummary;
-import com.claimwildcats.api.dto.CreateFoundItemRequest;
-import com.claimwildcats.api.dto.CreateLostItemRequest;
-import com.claimwildcats.api.dto.ItemSearchResponse;
-import com.claimwildcats.api.dto.UpdateItemStatusRequest;
-import com.claimwildcats.api.security.SecurityUtils;
-import com.claimwildcats.api.service.ItemService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import java.util.List;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,9 +14,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.claimwildcats.api.domain.CampusZone;
+import com.claimwildcats.api.domain.ItemDetail;
+import com.claimwildcats.api.domain.ItemStatus; // Imported all annotations
+import com.claimwildcats.api.domain.ItemSummary;
+import com.claimwildcats.api.dto.CreateFoundItemRequest;
+import com.claimwildcats.api.dto.CreateLostItemRequest;
+import com.claimwildcats.api.dto.ItemSearchResponse;
+import com.claimwildcats.api.dto.UpdateItemStatusRequest;
+import com.claimwildcats.api.service.ItemService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/items")
-@Validated
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175"}) // Fix CORS
 @Tag(name = "Items")
 public class ItemController {
 
@@ -40,9 +41,7 @@ public class ItemController {
     }
 
     @GetMapping
-    @Operation(
-            summary = "Search items",
-            description = "Returns a paginated feed of lost and found posts filtered by status, campus zone, and query.")
+    @Operation(summary = "Search items")
     public ItemSearchResponse browse(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "campusZone", required = false) String campusZone,
@@ -55,40 +54,41 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get item", description = "Fetch detail for a single lost or found report.")
     public ItemDetail get(@PathVariable String id) {
         return itemService.findById(id);
     }
 
     @GetMapping("/{id}/similar")
-    @Operation(summary = "Similar items", description = "Suggests potential matches for the given item.")
     public List<ItemSummary> similar(@PathVariable String id) {
         return itemService.findSimilar(id);
     }
 
+    // --- MODIFIED ENDPOINT: REPORT LOST ---
     @PostMapping("/lost")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create lost item", description = "Submit a new lost item report.")
-    public ItemDetail reportLost(@Valid @RequestBody CreateLostItemRequest request) {
-        String reporterId = SecurityUtils.currentUserId()
-                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+    public ItemDetail reportLost(
+        @Valid @RequestBody CreateLostItemRequest request,
+        @RequestParam String reporterId 
+    ) {
         return itemService.createLostItem(request, reporterId);
     }
 
+    // --- MODIFIED ENDPOINT: REPORT FOUND ---
     @PostMapping("/found")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create found item", description = "Submit a new found item report.")
-    public ItemDetail reportFound(@Valid @RequestBody CreateFoundItemRequest request) {
-        String reporterId = SecurityUtils.currentUserId()
-                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
+    public ItemDetail reportFound(
+        @Valid @RequestBody CreateFoundItemRequest request,
+        @RequestParam String reporterId 
+    ) {
         return itemService.createFoundItem(request, reporterId);
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Update item status", description = "Owners can update the lifecycle state for their item.")
-    public ItemDetail updateStatus(@PathVariable String id, @Valid @RequestBody UpdateItemStatusRequest request) {
-        String currentUser = SecurityUtils.currentUserId()
-                .orElseThrow(() -> new AccessDeniedException("Authentication required"));
-        return itemService.updateStatus(id, request, currentUser);
+    public ItemDetail updateStatus(
+        @PathVariable String id, 
+        @Valid @RequestBody UpdateItemStatusRequest request,
+        @RequestParam String reporterId 
+    ) {
+        return itemService.updateStatus(id, request, reporterId);
     }
 }

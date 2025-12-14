@@ -1,6 +1,6 @@
+import { getDownloadURL, ref as storageRef } from 'firebase/storage';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ref as storageRef, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 import './ItemGallery.css';
 
@@ -158,6 +158,9 @@ export function ItemGallery({ items }) {
                   ) : null}
                 </p>
                 {snippet ? <p className="item-card__snippet">{snippet}</p> : null}
+                {item.reporterUsername ? (
+                  <p className="item-card__reporter">Reported by: {item.reporterUsername}</p>
+                ) : null}
                 <p className="item-card__updated">
                   Updated {new Date(item.createdAt).toLocaleString('en-PH', DATE_FORMAT_OPTIONS)}
                 </p>

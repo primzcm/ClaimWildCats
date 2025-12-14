@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import CatLogo from '../icons/CatLogo.png';
+import CatLogo from '../icons/CatLogo.png'; 
 import './LoginPage.css';
 
 export function LoginPage() {
@@ -9,7 +9,7 @@ export function LoginPage() {
   const location = useLocation();
   const { login } = useAuth(); 
   
-  const redirectTo = location.state?.from ?? '/me'; 
+  const redirectTo = location.state?.from ?? '/home'; 
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +46,9 @@ export function LoginPage() {
       }
 
       console.log("Login Successful:", data);
+      
       login(data); 
+
       resetForm();
       
       navigate(redirectTo, { replace: true });
@@ -62,12 +64,12 @@ export function LoginPage() {
   return (
     <section className="login-shell">
 
-      {/* si cat */}
+      {/* LEFT SIDE CAT IMAGE */}
       <div className="login-cat">
         <img src={CatLogo} alt="Cat Logo" />
       </div>
 
-      {/* form sa right side */}
+      {/* RIGHT SIDE FORM */}
       <div className="login-card">
         <h1 className="login-title">LOG IN</h1>
 
@@ -75,11 +77,10 @@ export function LoginPage() {
           <label className="login-label">
             Email / Username
             <input
-              type="email"
+              type="text" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
-              placeholder="wildcat@campus.edu"
               required
             />
           </label>
