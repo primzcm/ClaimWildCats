@@ -1,20 +1,48 @@
 package com.claimwildcats.api.dto;
 
 public class RegisterRequest {
-    private String full_name; 
+
+    private String name;
+    private String username;
     private String email;
+    private String idNumber;
+    private String contactNumber;
+    private String department;
     private String password;
-    private String role;
+    // getters and setters
 
-    public String getFull_name() { return full_name; }
-    public void setFull_name(String full_name) { this.full_name = full_name; }
+    public void setName(String name){ this.name  = name;}
+    public String getName(){
+        return name;
+    }
 
-    public String getEmail() { return email; }
+    public void setUsername(String username) { this.username = username; }
+    public String getUsername(){
+        return username;
+    }
+
     public void setEmail(String email) { this.email = email; }
+    public String getEmail(){
+        return email;
+    }
 
-    public String getPassword() { return password; }
+    public void setIdNumber(String idNumber) { this.idNumber = idNumber; }
+    public String getIdNumber(){
+        return idNumber;
+    }
+
+    public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
+    public String getContactNumber(){
+        return contactNumber;
+    }
+
+    public void setDepartment(String department) { this.department = department; }
+    public String getDepartment(){
+        return department;
+    }
+
     public void setPassword(String password) { this.password = password; }
-
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public String getPassword(){
+        return password;
+    }
 }

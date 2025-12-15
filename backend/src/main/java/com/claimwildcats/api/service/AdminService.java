@@ -67,11 +67,11 @@ public class AdminService {
 
     private UserProfile mapToUserProfile(User user) {
         return new UserProfile(
-                user.getId(),
-                user.getFullName(),
+                String.valueOf(user.getUserId()),
+                user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.isEmailVerified(),
+                false,
                 0,
                 0,
                 user.getCreatedAt()

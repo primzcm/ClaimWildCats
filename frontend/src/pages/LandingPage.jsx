@@ -31,7 +31,7 @@ export default function LandingPage() {
 
           <button
             className="landing-login-btn"
-            onClick={() => navigate("/auth/login")}
+            onClick={() => navigate("auth/login")}
           >
             Log in
             <img src={NextIcon} alt="Next" className="landing-next-icon" />

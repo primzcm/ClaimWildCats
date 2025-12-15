@@ -9,13 +9,19 @@ export function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="route-guard">
-        <div className="route-guard__card">Checking your session…</div>
+        <div className="route-guard__card">Checking your sessionâ€¦</div>
       </div>
     );
   }
 
   if (!user) {
-    return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to="auth/login"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
   }
 
   return children;
@@ -23,19 +29,17 @@ export function ProtectedRoute({ children }) {
 
 export function PublicOnlyRoute({ children, redirectTo = '/me' }) {
   const { user, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     return (
       <div className="route-guard">
-        <div className="route-guard__card">Preparing page…</div>
+        <div className="route-guard__card">Preparing pageâ€¦</div>
       </div>
     );
   }
 
   if (user) {
-    const target = location.state?.from ?? redirectTo;
-    return <Navigate to={target} replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return children;

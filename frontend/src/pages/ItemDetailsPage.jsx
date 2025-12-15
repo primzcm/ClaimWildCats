@@ -1,10 +1,10 @@
 import './ItemDetailsPage.css';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ref as storageRef, getDownloadURL } from 'firebase/storage';
+//import { ref as storageRef, getDownloadURL } from 'firebase/storage';
 import { PageLayout } from '../components/PageLayout';
 import { api } from '../api/client';
-import { storage } from '../lib/firebase';
+//import { storage } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 
 const formatter = new Intl.DateTimeFormat('en-PH', {

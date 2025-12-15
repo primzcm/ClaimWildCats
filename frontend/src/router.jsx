@@ -25,12 +25,10 @@ import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 // ✅ IMPORT THE PROFILE PAGE
-import { ProfilePage } from './pages/ProfilePage';
+import { UserProfile } from './pages/UserProfile';
 
 export const router = createBrowserRouter([
-
-  { index: true, element: <LandingPage /> },
-
+  { path: '/', element: <LandingPage />},
   {
     path: '/',
     element: <App />,
@@ -49,7 +47,7 @@ export const router = createBrowserRouter([
       { path: 'items/:id/edit', element: <ProtectedRoute><EditItemPage /></ProtectedRoute> },
       { path: 'items/:id/claim', element: <ProtectedRoute><ClaimItemPage /></ProtectedRoute> },
       
-      { path: 'me', element: <ProtectedRoute><ProfilePage /></ProtectedRoute> },
+      { path: 'me', element: <ProtectedRoute><UserProfile /></ProtectedRoute> },
       
       { path: 'me/reports', element: <ProtectedRoute><MyReportsPage /></ProtectedRoute> },
       { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },

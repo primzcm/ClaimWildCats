@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: 2.25rem;
   padding-bottom: 2.5rem;
-  margin-top: -3rem;
+  margin-top: 0;
+  padding-top: 4rem; 
 }
 
 .gs-hero {
@@ -29,6 +30,7 @@
 .gs-hero__overlay {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(
     90deg,
     rgba(248, 240, 229, 0.3) 0%,
@@ -238,11 +240,5 @@
 
   .gs-cta {
     width: 100%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .gs-page {
-    margin-top: -4rem;
   }
 }

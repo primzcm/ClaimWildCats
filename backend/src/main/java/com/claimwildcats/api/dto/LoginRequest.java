@@ -1,12 +1,24 @@
 package com.claimwildcats.api.dto;
 
 public class LoginRequest {
-    private String email;
+    private String identifier; // can be email or username
     private String password;
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    // Getter and setter for identifier
+    public String getIdentifier() {
+        return identifier;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    // Getter and setter for password
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

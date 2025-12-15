@@ -3,25 +3,26 @@ package com.claimwildcats.api.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.claimwildcats.api.domain.ClaimSummary;
-import com.claimwildcats.api.domain.ItemStatus;
 import com.claimwildcats.api.domain.ItemSummary;
-import com.claimwildcats.api.domain.UserProfile;
 import com.claimwildcats.api.domain.UserRole;
+import com.claimwildcats.api.dto.RegisterRequest;
 import com.claimwildcats.api.entity.User;
+import com.claimwildcats.api.entity.UserProfile;
+import com.claimwildcats.api.repository.UserProfileRepository;
 import com.claimwildcats.api.repository.UserRepository;
+
 
 @Service
 public class UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
-    //?
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private ItemService itemService;
@@ -30,118 +31,102 @@ public class UserService {
     private ClaimService claimService;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserProfileRepository profileRepository;
 
 
-    //main profile logicc
-    public UserProfile getProfile (String userId){
-        // 1. get stats from other services
-        List <ItemSummary> reports = listMyReports(userId);
-        long resolvedCount = reports.stream()
-                .filter(summary -> summary.status() == ItemStatus.CLAIMED)
-                .count();
-        long openCount = reports.size() - resolvedCount;
+    private static final Pattern ID_PATTERN = Pattern.compile("\\d{2}-\\d{4}-\\d{3}");
+    private static final Pattern CONTACT_PATTERN = Pattern.compile("^09\\d{9}$");
 
-        Optional<User> userEntity = userRepository.findById(userId);
 
-        if (userEntity.isPresent()){
-            return mapToUserProfile(userEntity.get(), (int) openCount,(int)resolvedCount);
-        } else {
-            // fallback default
-            return new UserProfile(
-                userId,
-                userId,
-                userId,
-                UserRole.USER,
-                false,
-                (int) openCount,
-                (int) resolvedCount,
-                Instant.now());
-        }
-        }
-    
-
-        public List<ItemSummary> listMyReports(String userId){
-            // has to add listReportsForUser function in ItemService
-            return itemService.listReportsForUser(userId); // to make
+    // ====================== REGISTER ======================
+    public void registerNewUser(RegisterRequest req) {
+        if (userRepository.existsByUsername(req.getUsername())) {
+            throw new RuntimeException("Username already exists");
         }
 
-        public List<ClaimSummary> listMyClaims(String userId){
-            return claimService.listClaimsForUser(userId); // to make
+        if (!ID_PATTERN.matcher(req.getIdNumber()).matches()) {
+            throw new RuntimeException("Invalid ID number format");
         }
 
-        //login ??
-        public void ensureUserExists(String userId, String email, String name){
-            if (!userRepository.existsById(userId)){ // to make
-                User newUser = new User(userId, email);
-                newUser.setFullName(name);
-                userRepository.save(newUser);
-            }
+        if (!CONTACT_PATTERN.matcher(req.getContactNumber()).matches()) {
+            throw new RuntimeException("Invalid contact number");
         }
 
-        private UserProfile mapToUserProfile(User user, int openCount, int resolvedCount){
-            return new UserProfile(
-                user.getId(),
-                user.getFullName() != null ? user.getFullName() : user.getId(),
-                user.getEmail() != null ? user.getEmail() : user.getId(),
-                user.getRole(),
-                user.isEmailVerified(),
-                openCount,
-                resolvedCount,
-                user.getCreatedAt()
-            );
-        }
+        User user = new User();
+        user.setName(req.getName());
+        user.setUsername(req.getUsername());
+        user.setEmail(req.getEmail());
+        user.setIdNumber(req.getIdNumber());
+        user.setContactNumber(req.getContactNumber());
+        user.setDepartment(req.getDepartment());
+        user.setPassword(req.getPassword()); // TODO: hash later
+        user.setRole(UserRole.USER);
+        user.setCreatedAt(Instant.now());
 
-        public void registerNewUser(String fullName, String email, String password, String roleInput) {
-            String newUserId = java.util.UUID.randomUUID().toString();
-    
-            User newUser = new User(newUserId, email);
-            newUser.setFullName(fullName);
-            newUser.setPassword(password);  
-            try {
-                if (roleInput != null && !roleInput.isEmpty()) {
-                    newUser.setRole(UserRole.valueOf(roleInput.toUpperCase())); 
-                } else {
-                    newUser.setRole(UserRole.USER);
-                }
-            } catch (Exception e) {
-                newUser.setRole(UserRole.USER);
-            }
-                userRepository.save(newUser);
-        }
+        //userRepository.save(user);
 
-        public User login(String email, String password) {
-            Optional<User> userOpt = userRepository.findByEmail(email);
-            
-            if (userOpt.isEmpty()) {
-                throw new RuntimeException("User not found");
-            }
-    
-            User user = userOpt.get();
-    
-            
-            if (!user.getPassword().equals(password)) {
-                throw new RuntimeException("Invalid password");
-            }
-    
-            return user;
-        }
+        User savedUser = userRepository.save(user);
 
-        public void updateUser(String userId, String newName, String newEmail) {
-            User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            // Only update if not null
-            if (newName != null && !newName.isEmpty()) {
-                user.setFullName(newName);
-            }
-            if (newEmail != null && !newEmail.isEmpty()) {
-                user.setEmail(newEmail);
-            }
-            
-            userRepository.save(user);
-        }
+        // Create empty profile
+        UserProfile profile = new UserProfile(savedUser);
+        profileRepository.save(profile);
 
-        
     }
 
+    // ====================== LOGIN ======================
+    public User login(String identifier, String password) {
+        Optional<User> userOpt = userRepository.findByEmailOrUsername(identifier, identifier);
+        if (userOpt.isEmpty()) throw new RuntimeException("User not found");
+
+        User user = userOpt.get();
+        if (!user.getPassword().equals(password)) throw new RuntimeException("Invalid password");
+
+        return user;
+    }
+
+    // ====================== PROFILE ======================
+    // public UserProfile getProfile(Long userId) {
+    // return profileRepository.findByUserUserId(userId)
+    //     .orElseThrow(() -> new RuntimeException("Profile not found"));
+    // }
+
+
+    // private UserProfile mapToUserProfile(User user) {
+    //     return new UserProfile(
+    //             String.valueOf(user.getUserId()),
+    //             user.getName(),
+    //             user.getEmail(),
+    //             user.getRole(),
+    //             true,
+    //             listMyReports(user.getUserId()).size(),
+    //             listMyClaims(user.getUserId()).size(),
+    //             user.getCreatedAt()
+    //     );
+    // }
+
+    // ====================== LIST REPORTS ======================
+    public List<ItemSummary> listMyReports(Long userId) {
+        return itemService.listReportsForUser(String.valueOf(userId));
+    }
+
+    // ====================== LIST CLAIMS ======================
+    public List<ClaimSummary> listMyClaims(Long userId) {
+        return claimService.listClaimsForUser(String.valueOf(userId));
+    }
+
+    // ====================== UPDATE USER ======================
+    public void updateUser(Long userId, String newName, String newEmail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (newName != null && !newName.isEmpty()) {
+            user.setName(newName);
+        }
+        if (newEmail != null && !newEmail.isEmpty()) {
+            user.setEmail(newEmail);
+        }
+
+        userRepository.save(user);
+    }
+
+}

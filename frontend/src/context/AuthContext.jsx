@@ -27,9 +27,16 @@ export function AuthProvider({ children }) {
 
  
   const login = (userData) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+  // Map backend field names to frontend
+  const mappedUser = {
+    userId: userData.userId, // map userId → id
+    fullName: userData.name, // map name → fullName
+    email: userData.email,
+    role: userData.role,
   };
+  localStorage.setItem('user', JSON.stringify(mappedUser));
+  setUser(mappedUser);
+};
 
   const logout = () => {
     localStorage.removeItem('user');

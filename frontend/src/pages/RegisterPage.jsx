@@ -12,6 +12,11 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
+  const [name, setName] = useState('');
+  const [idNumber, setIdNumber] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [department, setDepartment] = useState('');
+
   // Error handling
   const [errors, setErrors] = useState([]); 
   const [success, setSuccess] = useState('');
@@ -62,11 +67,14 @@ export function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          full_name: trimmedUsername, // Map 'username' to 'full_name' for Java
-          email: email,
-          password: password,
-          role: 'user' // Default role since we removed the input field from UI
-        }),
+              name,
+              username,
+              email,
+              idNumber,
+              contactNumber,
+              department,
+              password
+            })
       });
 
       if (!response.ok) {
@@ -127,6 +135,43 @@ export function RegisterPage() {
               placeholder="ex: juandelacruz@cit.edu"
               required
             />
+          </label>
+
+          <label className="login-label">
+            Full Name
+            <input value={name} onChange={e => setName(e.target.value)} required />
+          </label>
+
+          <label className="login-label">
+            ID Number
+            <input placeholder="00-0000-000"
+              value={idNumber}
+              onChange={e => setIdNumber(e.target.value)}
+              required />
+          </label>
+
+          <label className="login-label">
+            Contact Number
+            <input placeholder="09XXXXXXXXX"
+              value={contactNumber}
+              onChange={e => setContactNumber(e.target.value)}
+              required />
+          </label>
+
+          <label className="login-label">
+            Department
+            <select value={department} onChange={e => setDepartment(e.target.value)} required>
+              <option value="">Select Department</option>
+              <option>College of Nursing and Allied Sciences</option>
+              <option>College of Computer Studies</option>
+              <option>College of Criminal Justice</option>
+              <option>Elementary</option>
+              <option>Junior High School</option>
+              <option>Senior High School</option>
+              <option>College of Engineering and Architecture</option>
+              <option>College of Arts, Sciences and Education</option>
+              <option>College of Management, Business and Accountancy</option>
+            </select>
           </label>
 
           <label className="login-label">

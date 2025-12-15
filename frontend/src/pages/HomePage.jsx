@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getDownloadURL, ref as storageRef } from 'firebase/storage';
+//import { getDownloadURL, ref as storageRef } from 'firebase/storage';
 import heroIllustration from '../icons/front.png';
 import { api } from '../api/client';
-import { storage } from '../lib/firebase';
+//import { storage } from '../lib/firebase';
 import './HomePage.css';
 
 const formatter = new Intl.DateTimeFormat('en-PH', {

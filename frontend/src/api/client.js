@@ -1,14 +1,26 @@
-import { auth } from '../lib/firebase';
+//import { auth } from '../lib/firebase';
 
-export async function api(path, init = {}) {
-  const headers = new Headers(init.headers || {});
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    const token = await currentUser.getIdToken();
-    headers.set('Authorization', `Bearer ${token}`);
+// const API_BASE = "http://localhost:8080";
+
+// export async function api(path, init = {}) {
+//   const response = await fetch(`${API_BASE}${path}`, init);
+
+//   if (!response.ok) {
+//     throw new Error(`${response.status} ${response.statusText}`);
+//   }
+
+//   return response.json();
+// }
+
+export async function api(url, options = {}) {
+  const res = await fetch(`http://localhost:8080${url}`, {
+    credentials: "include",
+    ...options,
+  });
+
+  if (!res.ok) {
+    throw new Error("API error");
   }
 
-  const response = await fetch(path, { ...init, headers });
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  return response.json();
+  return res.json();
 }

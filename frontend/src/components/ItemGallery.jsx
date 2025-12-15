@@ -1,7 +1,7 @@
-import { getDownloadURL, ref as storageRef } from 'firebase/storage';
+//import { getDownloadURL, ref as storageRef } from 'firebase/storage';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { storage } from '../lib/firebase';
+//import { storage } from '../lib/firebase';
 import './ItemGallery.css';
 
 function normaliseWhitespace(value) {

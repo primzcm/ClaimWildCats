@@ -1,12 +1,10 @@
 package com.claimwildcats.api;
-
-import com.claimwildcats.api.config.FirebaseProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@EnableConfigurationProperties(FirebaseProperties.class)
+@ComponentScan("com.claimwildcats.api")
 public class ClaimWildCatsApiApplication {
 
     public static void main(String[] args) {
