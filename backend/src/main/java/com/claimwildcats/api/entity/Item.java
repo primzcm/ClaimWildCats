@@ -7,16 +7,13 @@ import java.util.List;
 import com.claimwildcats.api.domain.CampusZone;
 import com.claimwildcats.api.domain.ItemStatus;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -47,14 +44,10 @@ public class Item {
 
     // mysql cannot store lists directly in one cell.
     // @elementcollection creates a separate hidden table for these lists automatically.
-    @ElementCollection
-    @CollectionTable(name = "items_tags", joinColumns = @JoinColumn(name = "item_id"))
     @Column(name = "url")
     private List<String> tags = new ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "items_docs", joinColumns = @JoinColumn(name = "item_id"))
-    @Column(name = "url")
+     @Column(name = "url")
     private List<String> docUrls = new ArrayList<>();
 
     public Item(){
